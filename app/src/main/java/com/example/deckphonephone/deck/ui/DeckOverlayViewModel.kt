@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class DeckOverlayController(
+class DeckOverlayViewModel(
     private val useCases: DeckUseCases,
     private val onFinished: () -> Unit,
     private val onTransientMessage: (String) -> Unit,

@@ -21,7 +21,7 @@ import com.example.deckphonephone.deck.ui.DeckSettingScreen
 import com.example.deckphonephone.deck.ui.DeckSettingViewModel
 import com.example.deckphonephone.ui.theme.DeckphonephoneTheme
 
-class MainActivity : ComponentActivity() {
+class DeckEntryPointRouter : ComponentActivity() {
     private val appContainer by lazy {
         DeckAppContainer(applicationContext)
     }
@@ -47,12 +47,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleEntryPoint(intent: Intent?) {
-        when (DeckSurfacePolicy.effectForEntryPoint(currentSurface, intent.toSurfaceEntryPoint())) {
+        when (DeckSurfacePolicy.effectForEntryPoint(intent.toSurfaceEntryPoint())) {
             DeckSurfaceEffect.ShowSettings -> showSettingScreen()
             DeckSurfaceEffect.ShowOverlay -> launchOverlayOrPermissionSettings()
-            DeckSurfaceEffect.CloseSettingsThenShowOverlay -> closeSettingsThenShowOverlay()
             DeckSurfaceEffect.KeepSettings,
-            DeckSurfaceEffect.CloseSettings -> Unit
+            DeckSurfaceEffect.CloseSettings,
+            DeckSurfaceEffect.CloseSettingsThenShowOverlay -> Unit
         }
     }
 
@@ -74,7 +74,11 @@ class MainActivity : ComponentActivity() {
 
     private fun exitSettingScreen() {
         when (DeckSurfacePolicy.effectForSettingsExit(DeckSettingsExit.BackPressed)) {
-            DeckSurfaceEffect.ShowOverlay -> closeSettingsThenShowOverlay()
+            DeckSurfaceEffect.ShowOverlay -> {
+                currentSurface = null
+                launchOverlayOrPermissionSettings()
+            }
+
             DeckSurfaceEffect.ShowSettings,
             DeckSurfaceEffect.KeepSettings,
             DeckSurfaceEffect.CloseSettings,
@@ -85,36 +89,18 @@ class MainActivity : ComponentActivity() {
     private fun launchOverlayOrPermissionSettings() {
         currentSurface = DeckSurface.Overlay
         if (Settings.canDrawOverlays(this)) {
-            startOverlayAndFinishTask()
+            DeckOverlayService.start(this)
+            currentSurface = null
+            finishAndRemoveTask()
         } else {
-            openOverlayPermissionSettings()
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName"),
+            )
+            startActivity(intent)
+            currentSurface = null
+            finish()
         }
-    }
-
-    private fun closeSettingsThenShowOverlay() {
-        currentSurface = null
-        if (Settings.canDrawOverlays(this)) {
-            moveTaskToBack(true)
-            startOverlayAndFinishTask()
-        } else {
-            openOverlayPermissionSettings()
-        }
-    }
-
-    private fun startOverlayAndFinishTask() {
-        DeckOverlayService.start(this)
-        currentSurface = null
-        finishAndRemoveTask()
-    }
-
-    private fun openOverlayPermissionSettings() {
-        val intent = Intent(
-            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-            Uri.parse("package:$packageName"),
-        )
-        startActivity(intent)
-        currentSurface = null
-        finish()
     }
 
     private fun shouldCloseSettingsAfterStop(): Boolean {
@@ -139,7 +125,7 @@ class MainActivity : ComponentActivity() {
         private const val ACTION_OPEN_SETTING = "com.example.deckphonephone.action.OPEN_SETTING"
 
         fun createSettingIntent(context: Context): Intent {
-            return Intent(context, MainActivity::class.java).apply {
+            return Intent(context, DeckEntryPointRouter::class.java).apply {
                 action = ACTION_OPEN_SETTING
             }
         }

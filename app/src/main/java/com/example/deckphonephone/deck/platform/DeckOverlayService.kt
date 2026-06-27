@@ -18,11 +18,11 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.example.deckphonephone.DeckAppContainer
-import com.example.deckphonephone.MainActivity
+import com.example.deckphonephone.DeckEntryPointRouter
 import com.example.deckphonephone.deck.application.DeckSurface
 import com.example.deckphonephone.deck.application.DeckSurfacePolicy
-import com.example.deckphonephone.deck.ui.DeckOverlayController
 import com.example.deckphonephone.deck.ui.DeckOverlayScreen
+import com.example.deckphonephone.deck.ui.DeckOverlayViewModel
 import com.example.deckphonephone.ui.theme.DeckphonephoneTheme
 
 class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
@@ -39,7 +39,7 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
     }
 
     private var overlayView: ComposeView? = null
-    private var overlayController: DeckOverlayController? = null
+    private var overlayViewModel: DeckOverlayViewModel? = null
     private var isFinishingOverlay = false
 
     override fun onCreate() {
@@ -62,12 +62,12 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
     private fun showOverlay() {
         if (overlayView != null) return
 
-        val controller = DeckOverlayController(
+        val viewModel = DeckOverlayViewModel(
             useCases = appContainer.useCases,
             onFinished = ::finishOverlay,
             onTransientMessage = ::showToast,
         )
-        overlayController = controller
+        overlayViewModel = viewModel
 
         val composeView = ComposeView(this).apply {
             setViewTreeLifecycleOwner(this@DeckOverlayService)
@@ -76,7 +76,7 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
             isFocusableInTouchMode = true
             setOnKeyListener { _: View, keyCode: Int, event: KeyEvent ->
                 if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
-                    controller.goBack()
+                    viewModel.goBack()
                     true
                 } else {
                     false
@@ -85,7 +85,7 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
             setContent {
                 DeckphonephoneTheme {
                     DeckOverlayScreen(
-                        controller = controller,
+                        viewModel = viewModel,
                         onSettingsClicked = ::openSettings,
                     )
                 }
@@ -113,7 +113,7 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
         if (!DeckSurfacePolicy.canShowTogether(DeckSurface.Overlay, DeckSurface.Settings)) {
             removeOverlay()
         }
-        val intent = MainActivity.createSettingIntent(this).apply {
+        val intent = DeckEntryPointRouter.createSettingIntent(this).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
@@ -129,8 +129,8 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
     }
 
     private fun removeOverlay() {
-        overlayController?.clear()
-        overlayController = null
+        overlayViewModel?.clear()
+        overlayViewModel = null
 
         val view = overlayView ?: return
         overlayView = null

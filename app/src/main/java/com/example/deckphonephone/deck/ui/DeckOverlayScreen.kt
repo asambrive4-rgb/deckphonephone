@@ -47,26 +47,26 @@ import com.example.deckphonephone.deck.domain.DeckCategory
 
 @Composable
 fun DeckOverlayScreen(
-    controller: DeckOverlayController,
+    viewModel: DeckOverlayViewModel,
     onSettingsClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val uiState by controller.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(uiState.message) {
         uiState.message?.let { message ->
             snackbarHostState.showSnackbar(message)
-            controller.messageShown()
+            viewModel.messageShown()
         }
     }
 
     DeckOverlayScreenContent(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
-        onCategorySelected = controller::selectCategory,
-        onBack = controller::goBack,
-        onCardClicked = controller::executeCard,
+        onCategorySelected = viewModel::selectCategory,
+        onBack = viewModel::goBack,
+        onCardClicked = viewModel::executeCard,
         onSettingsClicked = onSettingsClicked,
         modifier = modifier,
     )
