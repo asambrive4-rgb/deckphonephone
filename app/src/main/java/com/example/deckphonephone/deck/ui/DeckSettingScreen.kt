@@ -13,11 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -38,7 +35,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
 import com.example.deckphonephone.deck.domain.DeckCategory
 
 @Composable
@@ -57,7 +53,6 @@ fun DeckSettingScreen(
         }
     }
 
-    
     BackHandler {
         if (uiState.selectedCategoryId == null) {
             onExit()
@@ -72,12 +67,28 @@ fun DeckSettingScreen(
         onCategoryNameChanged = viewModel::onCategoryNameChanged,
         onCreateCategory = viewModel::createCategory,
         onCategorySelected = viewModel::selectCategory,
+        onEditCategory = viewModel::requestEditCategory,
+        onDeleteCategory = viewModel::requestDeleteCategory,
         onBack = viewModel::leaveCategory,
         onCardTitleChanged = viewModel::onCardTitleChanged,
         onCardPayloadChanged = viewModel::onCardPayloadChanged,
         onCardTypeChanged = viewModel::onCardTypeChanged,
         onCreateCard = viewModel::createCard,
         onCardClicked = viewModel::executeCard,
+        onEditCard = viewModel::requestEditCard,
+        onToggleCardEnabled = viewModel::toggleCardEnabled,
+        onDeleteCard = viewModel::requestDeleteCard,
+        onEditingCategoryNameChanged = viewModel::onEditingCategoryNameChanged,
+        onSaveCategoryEdit = viewModel::saveCategoryEdit,
+        onDismissCategoryEdit = viewModel::dismissCategoryEdit,
+        onEditingCardTitleChanged = viewModel::onEditingCardTitleChanged,
+        onEditingCardPayloadChanged = viewModel::onEditingCardPayloadChanged,
+        onEditingCardTypeChanged = viewModel::onEditingCardTypeChanged,
+        onEditingCardEnabledChanged = viewModel::onEditingCardEnabledChanged,
+        onSaveCardEdit = viewModel::saveCardEdit,
+        onDismissCardEdit = viewModel::dismissCardEdit,
+        onConfirmDelete = viewModel::confirmDelete,
+        onDismissDelete = viewModel::dismissDeleteConfirmation,
         modifier = modifier,
     )
 }
@@ -90,12 +101,28 @@ private fun DeckSettingScreenContent(
     onCategoryNameChanged: (String) -> Unit,
     onCreateCategory: () -> Unit,
     onCategorySelected: (Long) -> Unit,
+    onEditCategory: (DeckCategory) -> Unit,
+    onDeleteCategory: (DeckCategory) -> Unit,
     onBack: () -> Unit,
     onCardTitleChanged: (String) -> Unit,
     onCardPayloadChanged: (String) -> Unit,
     onCardTypeChanged: (CardType) -> Unit,
     onCreateCard: () -> Unit,
     onCardClicked: (ActionCard) -> Unit,
+    onEditCard: (ActionCard) -> Unit,
+    onToggleCardEnabled: (ActionCard) -> Unit,
+    onDeleteCard: (ActionCard) -> Unit,
+    onEditingCategoryNameChanged: (String) -> Unit,
+    onSaveCategoryEdit: () -> Unit,
+    onDismissCategoryEdit: () -> Unit,
+    onEditingCardTitleChanged: (String) -> Unit,
+    onEditingCardPayloadChanged: (String) -> Unit,
+    onEditingCardTypeChanged: (CardType) -> Unit,
+    onEditingCardEnabledChanged: (Boolean) -> Unit,
+    onSaveCardEdit: () -> Unit,
+    onDismissCardEdit: () -> Unit,
+    onConfirmDelete: () -> Unit,
+    onDismissDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val selectedCategory = uiState.categories.firstOrNull { it.id == uiState.selectedCategoryId }
@@ -129,6 +156,8 @@ private fun DeckSettingScreenContent(
                 onCategoryNameChanged = onCategoryNameChanged,
                 onCreateCategory = onCreateCategory,
                 onCategorySelected = onCategorySelected,
+                onEditCategory = onEditCategory,
+                onDeleteCategory = onDeleteCategory,
                 modifier = Modifier.padding(innerPadding),
             )
         } else {
@@ -143,9 +172,41 @@ private fun DeckSettingScreenContent(
                 onCardTypeChanged = onCardTypeChanged,
                 onCreateCard = onCreateCard,
                 onCardClicked = onCardClicked,
+                onEditCard = onEditCard,
+                onToggleCardEnabled = onToggleCardEnabled,
+                onDeleteCard = onDeleteCard,
                 modifier = Modifier.padding(innerPadding),
             )
         }
+    }
+
+    uiState.editingCategory?.let { editState ->
+        CategoryEditDialog(
+            editState = editState,
+            onNameChanged = onEditingCategoryNameChanged,
+            onSave = onSaveCategoryEdit,
+            onDismiss = onDismissCategoryEdit,
+        )
+    }
+
+    uiState.editingCard?.let { editState ->
+        CardEditDialog(
+            editState = editState,
+            onTitleChanged = onEditingCardTitleChanged,
+            onPayloadChanged = onEditingCardPayloadChanged,
+            onCardTypeChanged = onEditingCardTypeChanged,
+            onEnabledChanged = onEditingCardEnabledChanged,
+            onSave = onSaveCardEdit,
+            onDismiss = onDismissCardEdit,
+        )
+    }
+
+    uiState.deleteTarget?.let { target ->
+        DeleteConfirmationDialog(
+            target = target,
+            onConfirm = onConfirmDelete,
+            onDismiss = onDismissDelete,
+        )
     }
 }
 
@@ -156,6 +217,8 @@ private fun HomeScreen(
     onCategoryNameChanged: (String) -> Unit,
     onCreateCategory: () -> Unit,
     onCategorySelected: (Long) -> Unit,
+    onEditCategory: (DeckCategory) -> Unit,
+    onDeleteCategory: (DeckCategory) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -194,6 +257,8 @@ private fun HomeScreen(
                 CategoryCard(
                     category = category,
                     onClick = { onCategorySelected(category.id) },
+                    onEdit = { onEditCategory(category) },
+                    onDelete = { onDeleteCategory(category) },
                 )
             }
         }
@@ -212,6 +277,9 @@ private fun CategoryDetailScreen(
     onCardTypeChanged: (CardType) -> Unit,
     onCreateCard: () -> Unit,
     onCardClicked: (ActionCard) -> Unit,
+    onEditCard: (ActionCard) -> Unit,
+    onToggleCardEnabled: (ActionCard) -> Unit,
+    onDeleteCard: (ActionCard) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -246,6 +314,9 @@ private fun CategoryDetailScreen(
                 ActionCardView(
                     card = card,
                     onClick = onCardClicked,
+                    onEdit = { onEditCard(card) },
+                    onToggleEnabled = { onToggleCardEnabled(card) },
+                    onDelete = { onDeleteCard(card) },
                 )
             }
         }
@@ -308,82 +379,5 @@ private fun CardForm(
         ) {
             Text("카드 추가")
         }
-    }
-}
-
-@Composable
-private fun CategoryCard(
-    category: DeckCategory,
-    onClick: () -> Unit,
-) {
-    ElevatedCard(
-        onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        modifier = Modifier.height(96.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = category.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = "카테고리",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActionCardView(
-    card: ActionCard,
-    onClick: (ActionCard) -> Unit,
-) {
-    ElevatedCard(
-        onClick = { onClick(card) },
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        modifier = Modifier.height(112.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = card.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = card.action.label(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-private fun CardAction.label(): String {
-    return when (this) {
-        is CardAction.CopyText -> "문구"
-        is CardAction.OpenUrl -> "웹사이트"
     }
 }

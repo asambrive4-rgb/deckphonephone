@@ -4,9 +4,9 @@ import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.CardAction
 import com.example.deckphonephone.deck.domain.DeckCategory
 
-private const val ACTION_COPY_TEXT = "copy_text"
+internal const val ACTION_COPY_TEXT = "copy_text"
 private const val ACTION_TEXT_PASTE = "text_paste"
-private const val ACTION_OPEN_URL = "open_url"
+internal const val ACTION_OPEN_URL = "open_url"
 
 fun CategoryEntity.toDomain() = DeckCategory(
     id = id,

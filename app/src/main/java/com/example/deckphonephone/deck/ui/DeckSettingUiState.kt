@@ -11,10 +11,31 @@ data class DeckSettingUiState(
     val cardTitleInput: String = "",
     val cardPayloadInput: String = "",
     val selectedCardType: CardType = CardType.Text,
+    val editingCategory: CategoryEditState? = null,
+    val editingCard: CardEditState? = null,
+    val deleteTarget: DeleteTarget? = null,
     val message: String? = null,
+)
+
+data class CategoryEditState(
+    val categoryId: Long,
+    val name: String,
+)
+
+data class CardEditState(
+    val cardId: Long,
+    val title: String,
+    val payload: String,
+    val selectedCardType: CardType,
+    val isEnabled: Boolean,
 )
 
 enum class CardType {
     Text,
     Web,
+}
+
+sealed interface DeleteTarget {
+    data class Category(val category: DeckCategory) : DeleteTarget
+    data class Card(val card: ActionCard) : DeleteTarget
 }

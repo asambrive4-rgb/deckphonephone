@@ -8,6 +8,8 @@ import com.example.deckphonephone.deck.application.DeckResult
 import com.example.deckphonephone.deck.application.DeckUseCases
 import com.example.deckphonephone.deck.application.ExecuteCardResult
 import com.example.deckphonephone.deck.domain.ActionCard
+import com.example.deckphonephone.deck.domain.CardAction
+import com.example.deckphonephone.deck.domain.DeckCategory
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,6 +53,64 @@ class DeckSettingViewModel(
 
                 is DeckResult.Failure -> showError(result.error)
             }
+        }
+    }
+
+    fun requestEditCategory(category: DeckCategory) {
+        _uiState.update {
+            it.copy(
+                editingCategory = CategoryEditState(
+                    categoryId = category.id,
+                    name = category.name,
+                ),
+                message = null,
+            )
+        }
+    }
+
+    fun onEditingCategoryNameChanged(value: String) {
+        _uiState.update { state ->
+            state.copy(
+                editingCategory = state.editingCategory?.copy(name = value),
+            )
+        }
+    }
+
+    fun dismissCategoryEdit() {
+        _uiState.update { it.copy(editingCategory = null) }
+    }
+
+    fun saveCategoryEdit() {
+        val state = _uiState.value
+        val editState = state.editingCategory ?: return
+        val category = state.categories.firstOrNull { it.id == editState.categoryId }
+        if (category == null) {
+            showMissingTarget()
+            return
+        }
+
+        viewModelScope.launch {
+            when (val result = useCases.updateCategory(category, editState.name)) {
+                is DeckResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            editingCategory = null,
+                            message = "카테고리를 수정했습니다.",
+                        )
+                    }
+                }
+
+                is DeckResult.Failure -> showError(result.error)
+            }
+        }
+    }
+
+    fun requestDeleteCategory(category: DeckCategory) {
+        _uiState.update {
+            it.copy(
+                deleteTarget = DeleteTarget.Category(category),
+                message = null,
+            )
         }
     }
 
@@ -141,6 +201,157 @@ class DeckSettingViewModel(
         }
     }
 
+    fun requestEditCard(card: ActionCard) {
+        _uiState.update {
+            it.copy(
+                editingCard = CardEditState(
+                    cardId = card.id,
+                    title = card.title,
+                    payload = card.action.payload(),
+                    selectedCardType = card.action.cardType(),
+                    isEnabled = card.isEnabled,
+                ),
+                message = null,
+            )
+        }
+    }
+
+    fun onEditingCardTitleChanged(value: String) {
+        _uiState.update { state ->
+            state.copy(editingCard = state.editingCard?.copy(title = value))
+        }
+    }
+
+    fun onEditingCardPayloadChanged(value: String) {
+        _uiState.update { state ->
+            state.copy(editingCard = state.editingCard?.copy(payload = value))
+        }
+    }
+
+    fun onEditingCardTypeChanged(type: CardType) {
+        _uiState.update { state ->
+            val editingCard = state.editingCard ?: return@update state
+            state.copy(
+                editingCard = editingCard.copy(
+                    selectedCardType = type,
+                    payload = if (editingCard.selectedCardType == type) editingCard.payload else "",
+                ),
+            )
+        }
+    }
+
+    fun onEditingCardEnabledChanged(isEnabled: Boolean) {
+        _uiState.update { state ->
+            state.copy(editingCard = state.editingCard?.copy(isEnabled = isEnabled))
+        }
+    }
+
+    fun dismissCardEdit() {
+        _uiState.update { it.copy(editingCard = null) }
+    }
+
+    fun saveCardEdit() {
+        val state = _uiState.value
+        val editState = state.editingCard ?: return
+        val card = state.cards.firstOrNull { it.id == editState.cardId }
+        if (card == null) {
+            showMissingTarget()
+            return
+        }
+
+        viewModelScope.launch {
+            val enabledCard = card.copy(isEnabled = editState.isEnabled)
+            val result = when (editState.selectedCardType) {
+                CardType.Text -> useCases.updateTextCard(
+                    card = enabledCard,
+                    title = editState.title,
+                    text = editState.payload,
+                )
+
+                CardType.Web -> useCases.updateWebCard(
+                    card = enabledCard,
+                    title = editState.title,
+                    rawUrl = editState.payload,
+                )
+            }
+
+            when (result) {
+                is DeckResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            editingCard = null,
+                            message = "카드를 수정했습니다.",
+                        )
+                    }
+                }
+
+                is DeckResult.Failure -> showError(result.error)
+            }
+        }
+    }
+
+    fun requestDeleteCard(card: ActionCard) {
+        _uiState.update {
+            it.copy(
+                deleteTarget = DeleteTarget.Card(card),
+                message = null,
+            )
+        }
+    }
+
+    fun toggleCardEnabled(card: ActionCard) {
+        viewModelScope.launch {
+            val updatedCard = useCases.setCardEnabled(
+                card = card,
+                isEnabled = !card.isEnabled,
+            )
+            showMessage(
+                if (updatedCard.isEnabled) {
+                    "카드를 활성화했습니다."
+                } else {
+                    "카드를 비활성화했습니다."
+                },
+            )
+        }
+    }
+
+    fun dismissDeleteConfirmation() {
+        _uiState.update { it.copy(deleteTarget = null) }
+    }
+
+    fun confirmDelete() {
+        val target = _uiState.value.deleteTarget ?: return
+        viewModelScope.launch {
+            when (target) {
+                is DeleteTarget.Category -> {
+                    if (_uiState.value.selectedCategoryId == target.category.id) {
+                        cardsJob?.cancel()
+                        cardsJob = null
+                    }
+                    useCases.deleteCategory(target.category.id)
+                    _uiState.update {
+                        it.copy(
+                            selectedCategoryId = if (it.selectedCategoryId == target.category.id) null else it.selectedCategoryId,
+                            cards = if (it.selectedCategoryId == target.category.id) emptyList() else it.cards,
+                            deleteTarget = null,
+                            message = "카테고리를 삭제했습니다.",
+                        )
+                    }
+                }
+
+                is DeleteTarget.Card -> {
+                    useCases.deleteCard(target.card.id)
+                    _uiState.update {
+                        it.copy(
+                            deleteTarget = null,
+                            message = "카드를 삭제했습니다.",
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     fun executeCard(card: ActionCard) {
         viewModelScope.launch {
             when (useCases.executeCard(card)) {
@@ -161,8 +372,33 @@ class DeckSettingViewModel(
         showMessage(error.toMessage())
     }
 
+    private fun showMissingTarget() {
+        _uiState.update {
+            it.copy(
+                editingCategory = null,
+                editingCard = null,
+                deleteTarget = null,
+                message = "대상을 찾지 못했습니다.",
+            )
+        }
+    }
+
     private fun showMessage(message: String) {
         _uiState.update { it.copy(message = message) }
+    }
+
+    private fun CardAction.payload(): String {
+        return when (this) {
+            is CardAction.CopyText -> text
+            is CardAction.OpenUrl -> url
+        }
+    }
+
+    private fun CardAction.cardType(): CardType {
+        return when (this) {
+            is CardAction.CopyText -> CardType.Text
+            is CardAction.OpenUrl -> CardType.Web
+        }
     }
 
     private fun DeckError.toMessage(): String {

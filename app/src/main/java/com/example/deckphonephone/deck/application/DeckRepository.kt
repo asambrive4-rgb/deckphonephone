@@ -23,4 +23,12 @@ interface DeckRepository {
         action: CardAction,
         isEnabled: Boolean = true,
     ): ActionCard
+
+    suspend fun updateCategory(category: DeckCategory): DeckCategory
+
+    suspend fun deleteCategory(categoryId: Long)
+
+    suspend fun updateCard(card: ActionCard): ActionCard
+
+    suspend fun deleteCard(cardId: Long)
 }
