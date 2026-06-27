@@ -42,7 +42,6 @@ class DeckOverlayViewModel(
     fun selectCategory(categoryId: Long) {
         _uiState.update {
             it.copy(
-                selectedCategoryId = categoryId,
                 cards = emptyList(),
                 isCardsLoading = true,
                 message = null,
@@ -54,6 +53,7 @@ class DeckOverlayViewModel(
             useCases.observeCards(categoryId).collect { cards ->
                 _uiState.update {
                     it.copy(
+                        selectedCategoryId = categoryId,
                         cards = cards,
                         isCardsLoading = false,
                     )

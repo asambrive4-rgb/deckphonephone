@@ -61,6 +61,8 @@ fun DeckOverlayScreen(
         }
     }
 
+    if (uiState.isCategoriesLoading) return
+
     DeckOverlayScreenContent(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
@@ -119,13 +121,11 @@ private fun DeckOverlayScreenContent(
                     if (selectedCategory == null) {
                         CategoryGrid(
                             categories = uiState.categories,
-                            isLoading = uiState.isCategoriesLoading,
                             onCategorySelected = onCategorySelected,
                         )
                     } else {
                         ActionCardGrid(
                             cards = uiState.cards,
-                            isLoading = uiState.isCardsLoading,
                             onCardClicked = onCardClicked,
                         )
                     }
@@ -178,19 +178,11 @@ private fun OverlayHeader(
 @Composable
 private fun CategoryGrid(
     categories: List<DeckCategory>,
-    isLoading: Boolean,
     onCategorySelected: (Long) -> Unit,
 ) {
-    when {
-        isLoading -> {
-            LoadingMessage()
-            return
-        }
-
-        categories.isEmpty() -> {
-            EmptyMessage(text = "카테고리가 없습니다")
-            return
-        }
+    if (categories.isEmpty()) {
+        EmptyMessage(text = "카테고리가 없습니다")
+        return
     }
 
     LazyVerticalGrid(
@@ -212,19 +204,11 @@ private fun CategoryGrid(
 @Composable
 private fun ActionCardGrid(
     cards: List<ActionCard>,
-    isLoading: Boolean,
     onCardClicked: (ActionCard) -> Unit,
 ) {
-    when {
-        isLoading -> {
-            LoadingMessage()
-            return
-        }
-
-        cards.isEmpty() -> {
-            EmptyMessage(text = "카드가 없습니다")
-            return
-        }
+    if (cards.isEmpty()) {
+        EmptyMessage(text = "카드가 없습니다")
+        return
     }
 
     LazyVerticalGrid(
@@ -315,10 +299,6 @@ private fun ActionCardView(
     }
 }
 
-@Composable
-private fun LoadingMessage() {
-    StatusMessage(text = "불러오는 중입니다")
-}
 
 @Composable
 private fun EmptyMessage(text: String) {

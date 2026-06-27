@@ -32,9 +32,38 @@ import org.junit.Test
 
 class DeckOverlayViewModelTest {
     @Test
-    fun `selecting category stays loading until cards are emitted`() {
+    fun `selecting category keeps category screen until cards are emitted`() {
         val viewModel = DeckOverlayViewModel(
-            useCases = SuspendedCardsRepository().toUseCases(),
+            useCases = FakeDeckRepository(
+                cardsFlow = flow { awaitCancellation() },
+            ).toUseCases(),
+            onFinished = {},
+            onTransientMessage = {},
+            dispatcher = Dispatchers.Unconfined,
+        )
+
+        viewModel.selectCategory(1L)
+
+        val state = viewModel.uiState.value
+        assertEquals(null, state.selectedCategoryId)
+        assertTrue(state.isCardsLoading)
+        assertEquals(emptyList<ActionCard>(), state.cards)
+
+        viewModel.clear()
+    }
+
+    @Test
+    fun `selecting category enters card screen when cards are emitted`() {
+        val card = ActionCard(
+            id = 10L,
+            categoryId = 1L,
+            title = "복사 슬롯",
+            action = CardAction.CopyText("hello"),
+        )
+        val viewModel = DeckOverlayViewModel(
+            useCases = FakeDeckRepository(
+                cardsFlow = flowOf(listOf(card)),
+            ).toUseCases(),
             onFinished = {},
             onTransientMessage = {},
             dispatcher = Dispatchers.Unconfined,
@@ -44,14 +73,16 @@ class DeckOverlayViewModelTest {
 
         val state = viewModel.uiState.value
         assertEquals(1L, state.selectedCategoryId)
-        assertTrue(state.isCardsLoading)
-        assertEquals(emptyList<ActionCard>(), state.cards)
+        assertEquals(false, state.isCardsLoading)
+        assertEquals(listOf(card), state.cards)
 
         viewModel.clear()
     }
 }
 
-private class SuspendedCardsRepository : DeckRepository {
+private class FakeDeckRepository(
+    private val cardsFlow: Flow<List<ActionCard>>,
+) : DeckRepository {
     override fun observeCategories(): Flow<List<DeckCategory>> {
         return flowOf(
             listOf(
@@ -64,7 +95,7 @@ private class SuspendedCardsRepository : DeckRepository {
     }
 
     override fun observeCards(categoryId: Long): Flow<List<ActionCard>> {
-        return flow { awaitCancellation() }
+        return cardsFlow
     }
 
     override suspend fun createCategory(

@@ -123,7 +123,6 @@ class DeckSettingViewModel(
     fun selectCategory(categoryId: Long) {
         _uiState.update {
             it.copy(
-                selectedCategoryId = categoryId,
                 cards = emptyList(),
                 isCardsLoading = true,
                 cardTitleInput = "",
@@ -136,6 +135,7 @@ class DeckSettingViewModel(
             useCases.observeCards(categoryId).collect { cards ->
                 _uiState.update {
                     it.copy(
+                        selectedCategoryId = categoryId,
                         cards = cards,
                         isCardsLoading = false,
                     )
