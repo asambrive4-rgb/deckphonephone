@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -132,7 +132,6 @@ internal fun CardAction.deckLabel(): String {
     return when (this) {
         is CardAction.CopyText -> "문구"
         is CardAction.OpenUrl -> "웹사이트"
+        is CardAction.BluetoothDevice -> "블루투스"
     }
 }
-
-

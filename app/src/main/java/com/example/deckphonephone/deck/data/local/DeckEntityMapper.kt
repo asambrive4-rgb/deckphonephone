@@ -7,6 +7,7 @@ import com.example.deckphonephone.deck.domain.DeckCategory
 internal const val ACTION_COPY_TEXT = "copy_text"
 private const val ACTION_TEXT_PASTE = "text_paste"
 internal const val ACTION_OPEN_URL = "open_url"
+internal const val ACTION_BLUETOOTH_DEVICE = "bluetooth_device"
 
 fun CategoryEntity.toDomain() = DeckCategory(
     id = id,
@@ -25,6 +26,12 @@ fun ActionCardEntity.toDomain() = ActionCard(
         ACTION_TEXT_PASTE -> CardAction.CopyText(textValue.orEmpty())
 
         ACTION_OPEN_URL -> CardAction.OpenUrl(urlValue.orEmpty())
+
+        ACTION_BLUETOOTH_DEVICE -> CardAction.BluetoothDevice(
+            deviceName = bluetoothDeviceName.orEmpty(),
+            deviceAddress = bluetoothDeviceAddress.orEmpty(),
+        )
+
         else -> error("Unknown card action type: $actionType")
     },
     isEnabled = isEnabled,
@@ -62,6 +69,16 @@ fun newCardEntity(
         description = description,
         actionType = ACTION_OPEN_URL,
         urlValue = action.url,
+        isEnabled = isEnabled,
+    )
+
+    is CardAction.BluetoothDevice -> ActionCardEntity(
+        categoryId = categoryId,
+        title = title,
+        description = description,
+        actionType = ACTION_BLUETOOTH_DEVICE,
+        bluetoothDeviceName = action.deviceName,
+        bluetoothDeviceAddress = action.deviceAddress,
         isEnabled = isEnabled,
     )
 }

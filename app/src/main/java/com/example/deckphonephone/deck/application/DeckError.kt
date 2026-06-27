@@ -7,4 +7,6 @@ sealed interface DeckError {
     data object UrlBlank : DeckError
     data object InvalidUrl : DeckError
     data object CategoryNotSelected : DeckError
+    data object BluetoothDeviceNotSelected : DeckError
+    data object BluetoothDeviceAddressBlank : DeckError
 }

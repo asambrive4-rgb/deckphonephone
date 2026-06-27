@@ -7,4 +7,5 @@ sealed interface ExecuteCardResult {
     data object CopyTextBlank : ExecuteCardResult
     data object OpenUrlFailed : ExecuteCardResult
     data object CopyTextFailed : ExecuteCardResult
+    data object BluetoothActionUnsupported : ExecuteCardResult
 }

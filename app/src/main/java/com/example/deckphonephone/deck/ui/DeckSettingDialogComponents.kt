@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 
 @Composable
 internal fun AppSettingsDialog(
@@ -104,9 +105,12 @@ internal fun CategoryEditDialog(
 @Composable
 internal fun CardEditDialog(
     editState: CardEditState,
+    bluetoothDevices: List<PairedBluetoothDevice>,
+    isBluetoothDevicesLoading: Boolean,
     onTitleChanged: (String) -> Unit,
     onPayloadChanged: (String) -> Unit,
     onCardTypeChanged: (CardType) -> Unit,
+    onBluetoothDeviceSelected: (PairedBluetoothDevice) -> Unit,
     onEnabledChanged: (Boolean) -> Unit,
     onSave: () -> Unit,
     onDismiss: () -> Unit,
@@ -126,38 +130,31 @@ internal fun CardEditDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = editState.selectedCardType == CardType.Text,
-                        onClick = { onCardTypeChanged(CardType.Text) },
-                        label = { Text("문구") },
+                CardTypeChips(
+                    selectedCardType = editState.selectedCardType,
+                    onCardTypeChanged = onCardTypeChanged,
+                )
+                if (editState.selectedCardType == CardType.Bluetooth) {
+                    BluetoothDeviceSelector(
+                        devices = bluetoothDevices,
+                        selectedDevice = editState.selectedBluetoothDevice,
+                        isLoading = isBluetoothDevicesLoading,
+                        onDeviceSelected = onBluetoothDeviceSelected,
                     )
-                    FilterChip(
-                        selected = editState.selectedCardType == CardType.Web,
-                        onClick = { onCardTypeChanged(CardType.Web) },
-                        label = { Text("웹") },
+                } else {
+                    OutlinedTextField(
+                        value = editState.payload,
+                        onValueChange = onPayloadChanged,
+                        label = { Text(editState.selectedCardType.payloadLabel()) },
+                        minLines = if (editState.selectedCardType == CardType.Text) 3 else 1,
+                        keyboardOptions = if (editState.selectedCardType == CardType.Web) {
+                            KeyboardOptions(keyboardType = KeyboardType.Uri)
+                        } else {
+                            KeyboardOptions.Default
+                        },
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
-                OutlinedTextField(
-                    value = editState.payload,
-                    onValueChange = onPayloadChanged,
-                    label = {
-                        Text(
-                            if (editState.selectedCardType == CardType.Text) {
-                                "복사할 문구"
-                            } else {
-                                "열 웹페이지 주소"
-                            },
-                        )
-                    },
-                    minLines = if (editState.selectedCardType == CardType.Text) 3 else 1,
-                    keyboardOptions = if (editState.selectedCardType == CardType.Web) {
-                        KeyboardOptions(keyboardType = KeyboardType.Uri)
-                    } else {
-                        KeyboardOptions.Default
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -231,4 +228,36 @@ internal fun DeleteConfirmationDialog(
             }
         },
     )
+}
+
+@Composable
+internal fun CardTypeChips(
+    selectedCardType: CardType,
+    onCardTypeChanged: (CardType) -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CardType.entries.forEach { type ->
+            FilterChip(
+                selected = selectedCardType == type,
+                onClick = { onCardTypeChanged(type) },
+                label = { Text(type.label()) },
+            )
+        }
+    }
+}
+
+internal fun CardType.label(): String {
+    return when (this) {
+        CardType.Text -> "문구"
+        CardType.Web -> "웹"
+        CardType.Bluetooth -> "블루투스"
+    }
+}
+
+private fun CardType.payloadLabel(): String {
+    return when (this) {
+        CardType.Text -> "복사할 문구"
+        CardType.Web -> "열 웹페이지 주소"
+        CardType.Bluetooth -> "블루투스 기기"
+    }
 }

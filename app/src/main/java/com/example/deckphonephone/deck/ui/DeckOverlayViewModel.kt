@@ -87,6 +87,9 @@ class DeckOverlayViewModel(
                 ExecuteCardResult.CopyTextBlank -> showMessage("복사할 문구가 없습니다")
                 ExecuteCardResult.OpenUrlFailed -> showMessage("웹페이지를 열지 못했습니다.")
                 ExecuteCardResult.CopyTextFailed -> showMessage("문구를 복사하지 못했습니다.")
+                ExecuteCardResult.BluetoothActionUnsupported -> showMessage(
+                    "블루투스 연결/해제는 아직 지원하지 않습니다.",
+                )
             }
         }
     }

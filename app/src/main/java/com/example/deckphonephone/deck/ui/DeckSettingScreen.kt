@@ -1,10 +1,14 @@
 package com.example.deckphonephone.deck.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +27,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,9 +44,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.DeckCategory
 
@@ -55,6 +61,43 @@ fun DeckSettingScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val bluetoothPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.loadPairedBluetoothDevices()
+        } else {
+            viewModel.bluetoothPermissionDenied()
+        }
+    }
+
+    fun requestBluetoothPermissionOrLoadDevices() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            viewModel.loadPairedBluetoothDevices()
+            return
+        }
+
+        val permission = Manifest.permission.BLUETOOTH_CONNECT
+        if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
+            viewModel.loadPairedBluetoothDevices()
+        } else {
+            bluetoothPermissionLauncher.launch(permission)
+        }
+    }
+
+    LaunchedEffect(
+        uiState.isCreatingCard,
+        uiState.selectedCardType,
+        uiState.editingCard?.cardId,
+        uiState.editingCard?.selectedCardType,
+    ) {
+        val createNeedsBluetooth = uiState.isCreatingCard && uiState.selectedCardType == CardType.Bluetooth
+        val editNeedsBluetooth = uiState.editingCard?.selectedCardType == CardType.Bluetooth
+        if (createNeedsBluetooth || editNeedsBluetooth) {
+            requestBluetoothPermissionOrLoadDevices()
+        }
+    }
 
     LaunchedEffect(uiState.message) {
         uiState.message?.let { message ->
@@ -87,6 +130,7 @@ fun DeckSettingScreen(
         onCardTitleChanged = viewModel::onCardTitleChanged,
         onCardPayloadChanged = viewModel::onCardPayloadChanged,
         onCardTypeChanged = viewModel::onCardTypeChanged,
+        onBluetoothDeviceSelected = viewModel::onBluetoothDeviceSelected,
         onCreateCardRequested = viewModel::requestCreateCard,
         onDismissCreateCard = viewModel::dismissCreateCard,
         onOpenAppSettings = viewModel::requestAppSettings,
@@ -103,6 +147,7 @@ fun DeckSettingScreen(
         onEditingCardTitleChanged = viewModel::onEditingCardTitleChanged,
         onEditingCardPayloadChanged = viewModel::onEditingCardPayloadChanged,
         onEditingCardTypeChanged = viewModel::onEditingCardTypeChanged,
+        onEditingBluetoothDeviceSelected = viewModel::onEditingBluetoothDeviceSelected,
         onEditingCardEnabledChanged = viewModel::onEditingCardEnabledChanged,
         onSaveCardEdit = viewModel::saveCardEdit,
         onDismissCardEdit = viewModel::dismissCardEdit,
@@ -128,6 +173,7 @@ private fun DeckSettingScreenContent(
     onCardTitleChanged: (String) -> Unit,
     onCardPayloadChanged: (String) -> Unit,
     onCardTypeChanged: (CardType) -> Unit,
+    onBluetoothDeviceSelected: (PairedBluetoothDevice) -> Unit,
     onCreateCardRequested: () -> Unit,
     onDismissCreateCard: () -> Unit,
     onOpenAppSettings: () -> Unit,
@@ -144,6 +190,7 @@ private fun DeckSettingScreenContent(
     onEditingCardTitleChanged: (String) -> Unit,
     onEditingCardPayloadChanged: (String) -> Unit,
     onEditingCardTypeChanged: (CardType) -> Unit,
+    onEditingBluetoothDeviceSelected: (PairedBluetoothDevice) -> Unit,
     onEditingCardEnabledChanged: (Boolean) -> Unit,
     onSaveCardEdit: () -> Unit,
     onDismissCardEdit: () -> Unit,
@@ -244,9 +291,13 @@ private fun DeckSettingScreenContent(
             title = uiState.cardTitleInput,
             payload = uiState.cardPayloadInput,
             selectedCardType = uiState.selectedCardType,
+            bluetoothDevices = uiState.pairedBluetoothDevices,
+            selectedBluetoothDevice = uiState.selectedBluetoothDevice,
+            isBluetoothDevicesLoading = uiState.isBluetoothDevicesLoading,
             onTitleChanged = onCardTitleChanged,
             onPayloadChanged = onCardPayloadChanged,
             onCardTypeChanged = onCardTypeChanged,
+            onBluetoothDeviceSelected = onBluetoothDeviceSelected,
             onSave = onCreateCard,
             onDismiss = onDismissCreateCard,
         )
@@ -264,9 +315,12 @@ private fun DeckSettingScreenContent(
     uiState.editingCard?.let { editState ->
         CardEditDialog(
             editState = editState,
+            bluetoothDevices = uiState.pairedBluetoothDevices,
+            isBluetoothDevicesLoading = uiState.isBluetoothDevicesLoading,
             onTitleChanged = onEditingCardTitleChanged,
             onPayloadChanged = onEditingCardPayloadChanged,
             onCardTypeChanged = onEditingCardTypeChanged,
+            onBluetoothDeviceSelected = onEditingBluetoothDeviceSelected,
             onEnabledChanged = onEditingCardEnabledChanged,
             onSave = onSaveCardEdit,
             onDismiss = onDismissCardEdit,
@@ -403,9 +457,13 @@ private fun CreateCardSheet(
     title: String,
     payload: String,
     selectedCardType: CardType,
+    bluetoothDevices: List<PairedBluetoothDevice>,
+    selectedBluetoothDevice: PairedBluetoothDevice?,
+    isBluetoothDevicesLoading: Boolean,
     onTitleChanged: (String) -> Unit,
     onPayloadChanged: (String) -> Unit,
     onCardTypeChanged: (CardType) -> Unit,
+    onBluetoothDeviceSelected: (PairedBluetoothDevice) -> Unit,
     onSave: () -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -431,38 +489,31 @@ private fun CreateCardSheet(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = selectedCardType == CardType.Text,
-                    onClick = { onCardTypeChanged(CardType.Text) },
-                    label = { Text("문구") },
+            CardTypeChips(
+                selectedCardType = selectedCardType,
+                onCardTypeChanged = onCardTypeChanged,
+            )
+            if (selectedCardType == CardType.Bluetooth) {
+                BluetoothDeviceSelector(
+                    devices = bluetoothDevices,
+                    selectedDevice = selectedBluetoothDevice,
+                    isLoading = isBluetoothDevicesLoading,
+                    onDeviceSelected = onBluetoothDeviceSelected,
                 )
-                FilterChip(
-                    selected = selectedCardType == CardType.Web,
-                    onClick = { onCardTypeChanged(CardType.Web) },
-                    label = { Text("웹") },
+            } else {
+                OutlinedTextField(
+                    value = payload,
+                    onValueChange = onPayloadChanged,
+                    label = { Text(selectedCardType.payloadLabel()) },
+                    minLines = if (selectedCardType == CardType.Text) 3 else 1,
+                    keyboardOptions = if (selectedCardType == CardType.Web) {
+                        KeyboardOptions(keyboardType = KeyboardType.Uri)
+                    } else {
+                        KeyboardOptions.Default
+                    },
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-            OutlinedTextField(
-                value = payload,
-                onValueChange = onPayloadChanged,
-                label = {
-                    Text(
-                        if (selectedCardType == CardType.Text) {
-                            "복사할 문구"
-                        } else {
-                            "열 웹페이지 주소"
-                        },
-                    )
-                },
-                minLines = if (selectedCardType == CardType.Text) 3 else 1,
-                keyboardOptions = if (selectedCardType == CardType.Web) {
-                    KeyboardOptions(keyboardType = KeyboardType.Uri)
-                } else {
-                    KeyboardOptions.Default
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
             Button(
                 onClick = onSave,
                 modifier = Modifier
@@ -473,5 +524,13 @@ private fun CreateCardSheet(
             }
             Spacer(modifier = Modifier.height(12.dp))
         }
+    }
+}
+
+private fun CardType.payloadLabel(): String {
+    return when (this) {
+        CardType.Text -> "복사할 문구"
+        CardType.Web -> "열 웹페이지 주소"
+        CardType.Bluetooth -> "블루투스 기기"
     }
 }

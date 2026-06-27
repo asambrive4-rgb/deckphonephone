@@ -11,6 +11,7 @@ class CreateUseCaseTest {
     private val createCategory = CreateCategoryUseCase(repository)
     private val createTextCard = CreateTextCardUseCase(repository)
     private val createWebCard = CreateWebCardUseCase(repository)
+    private val createBluetoothDeviceCard = CreateBluetoothDeviceCardUseCase(repository)
 
     @Test
     fun `category name is required`() = runBlocking {
@@ -54,5 +55,62 @@ class CreateUseCaseTest {
         assertTrue(result is DeckResult.Success)
         val card = (result as DeckResult.Success).value
         assertEquals(CardAction.OpenUrl("https://github.com"), card.action)
+    }
+
+    @Test
+    fun `bluetooth card stores selected device`() = runBlocking {
+        val device = PairedBluetoothDevice(
+            name = "Buds",
+            address = "AC:80:0A:20:CB:AF",
+        )
+
+        val result = createBluetoothDeviceCard(
+            categoryId = 7,
+            title = "이어폰",
+            device = device,
+        )
+
+        assertTrue(result is DeckResult.Success)
+        val card = (result as DeckResult.Success).value
+        assertEquals(
+            CardAction.BluetoothDevice(
+                deviceName = "Buds",
+                deviceAddress = "AC:80:0A:20:CB:AF",
+            ),
+            card.action,
+        )
+    }
+
+    @Test
+    fun `bluetooth card requires title`() = runBlocking {
+        val result = createBluetoothDeviceCard(
+            categoryId = 1,
+            title = " ",
+            device = PairedBluetoothDevice("Buds", "AC:80:0A:20:CB:AF"),
+        )
+
+        assertEquals(DeckResult.Failure(DeckError.CardTitleBlank), result)
+    }
+
+    @Test
+    fun `bluetooth card requires selected device`() = runBlocking {
+        val result = createBluetoothDeviceCard(
+            categoryId = 1,
+            title = "이어폰",
+            device = null,
+        )
+
+        assertEquals(DeckResult.Failure(DeckError.BluetoothDeviceNotSelected), result)
+    }
+
+    @Test
+    fun `bluetooth card requires device address`() = runBlocking {
+        val result = createBluetoothDeviceCard(
+            categoryId = 1,
+            title = "이어폰",
+            device = PairedBluetoothDevice("Buds", " "),
+        )
+
+        assertEquals(DeckResult.Failure(DeckError.BluetoothDeviceAddressBlank), result)
     }
 }

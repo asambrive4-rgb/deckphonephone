@@ -2,6 +2,7 @@ package com.example.deckphonephone.deck.ui
 
 import com.example.deckphonephone.deck.application.CopyTextPort
 import com.example.deckphonephone.deck.application.CopyTextResult
+import com.example.deckphonephone.deck.application.CreateBluetoothDeviceCardUseCase
 import com.example.deckphonephone.deck.application.CreateCategoryUseCase
 import com.example.deckphonephone.deck.application.CreateTextCardUseCase
 import com.example.deckphonephone.deck.application.CreateWebCardUseCase
@@ -10,14 +11,19 @@ import com.example.deckphonephone.deck.application.DeckUseCases
 import com.example.deckphonephone.deck.application.DeleteCardUseCase
 import com.example.deckphonephone.deck.application.DeleteCategoryUseCase
 import com.example.deckphonephone.deck.application.ExecuteCardUseCase
+import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
-import com.example.deckphonephone.deck.application.ThemePreferenceRepository
-import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
 import com.example.deckphonephone.deck.application.OpenUrlPort
 import com.example.deckphonephone.deck.application.OpenUrlResult
+import com.example.deckphonephone.deck.application.PairedBluetoothDevice
+import com.example.deckphonephone.deck.application.PairedBluetoothDevicesPort
+import com.example.deckphonephone.deck.application.PairedBluetoothDevicesResult
 import com.example.deckphonephone.deck.application.SetCardEnabledUseCase
+import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
+import com.example.deckphonephone.deck.application.ThemePreferenceRepository
+import com.example.deckphonephone.deck.application.UpdateBluetoothDeviceCardUseCase
 import com.example.deckphonephone.deck.application.UpdateCategoryUseCase
 import com.example.deckphonephone.deck.application.UpdateTextCardUseCase
 import com.example.deckphonephone.deck.application.UpdateWebCardUseCase
@@ -113,6 +119,20 @@ class DeckSettingViewModelTest {
     }
 
     @Test
+    fun `selecting bluetooth device fills blank card title`() {
+        val viewModel = DeckSettingViewModel(
+            useCases = FakeSettingDeckRepository().toUseCases(),
+            dispatcher = Dispatchers.Unconfined,
+        )
+        val device = PairedBluetoothDevice("Buds", "AC:80:0A:20:CB:AF")
+
+        viewModel.onBluetoothDeviceSelected(device)
+
+        assertEquals(device, viewModel.uiState.value.selectedBluetoothDevice)
+        assertEquals("Buds", viewModel.uiState.value.cardTitleInput)
+    }
+
+    @Test
     fun `requesting and dismissing app settings updates dialog state`() {
         val viewModel = DeckSettingViewModel(
             useCases = FakeSettingDeckRepository().toUseCases(),
@@ -202,7 +222,6 @@ private class FakeSettingDeckRepository : DeckRepository {
     override suspend fun deleteCard(cardId: Long) = Unit
 }
 
-
 private class FakeSettingThemePreferenceRepository : ThemePreferenceRepository {
     private val darkTheme = MutableStateFlow(false)
 
@@ -223,9 +242,12 @@ private fun DeckRepository.toUseCases(
         deleteCategory = DeleteCategoryUseCase(this),
         createTextCard = CreateTextCardUseCase(this),
         createWebCard = CreateWebCardUseCase(this),
+        createBluetoothDeviceCard = CreateBluetoothDeviceCardUseCase(this),
+        listPairedBluetoothDevices = ListPairedBluetoothDevicesUseCase(EmptySettingPairedBluetoothDevicesPort),
         observeCards = ObserveCardsUseCase(this),
         updateTextCard = UpdateTextCardUseCase(this),
         updateWebCard = UpdateWebCardUseCase(this),
+        updateBluetoothDeviceCard = UpdateBluetoothDeviceCardUseCase(this),
         deleteCard = DeleteCardUseCase(this),
         setCardEnabled = SetCardEnabledUseCase(this),
         executeCard = ExecuteCardUseCase(
@@ -235,6 +257,12 @@ private fun DeckRepository.toUseCases(
         observeDarkTheme = ObserveDarkThemeUseCase(themePreferenceRepository),
         setDarkTheme = SetDarkThemeUseCase(themePreferenceRepository),
     )
+}
+
+private object EmptySettingPairedBluetoothDevicesPort : PairedBluetoothDevicesPort {
+    override suspend fun listPairedBluetoothDevices(): PairedBluetoothDevicesResult {
+        return PairedBluetoothDevicesResult.Success(emptyList())
+    }
 }
 
 private object AlwaysSuccessfulSettingOpenUrlPort : OpenUrlPort {

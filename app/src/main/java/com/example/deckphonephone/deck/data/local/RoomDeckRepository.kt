@@ -105,6 +105,8 @@ class RoomDeckRepository(
                 actionType = ACTION_COPY_TEXT,
                 textValue = action.text,
                 urlValue = null,
+                bluetoothDeviceName = null,
+                bluetoothDeviceAddress = null,
                 isEnabled = isEnabled,
             )
 
@@ -115,6 +117,20 @@ class RoomDeckRepository(
                 actionType = ACTION_OPEN_URL,
                 textValue = null,
                 urlValue = action.url,
+                bluetoothDeviceName = null,
+                bluetoothDeviceAddress = null,
+                isEnabled = isEnabled,
+            )
+
+            is CardAction.BluetoothDevice -> existing.copy(
+                categoryId = categoryId,
+                title = title,
+                description = description,
+                actionType = ACTION_BLUETOOTH_DEVICE,
+                textValue = null,
+                urlValue = null,
+                bluetoothDeviceName = action.deviceName,
+                bluetoothDeviceAddress = action.deviceAddress,
                 isEnabled = isEnabled,
             )
         }

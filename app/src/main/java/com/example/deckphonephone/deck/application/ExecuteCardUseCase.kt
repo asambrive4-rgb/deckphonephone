@@ -15,6 +15,7 @@ class ExecuteCardUseCase(
         return when (val action = card.action) {
             is CardAction.OpenUrl -> openUrl(action.url)
             is CardAction.CopyText -> copyText(action.text)
+            is CardAction.BluetoothDevice -> ExecuteCardResult.BluetoothActionUnsupported
         }
     }
 

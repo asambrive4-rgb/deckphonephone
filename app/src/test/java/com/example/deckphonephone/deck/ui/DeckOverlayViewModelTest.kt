@@ -2,6 +2,7 @@ package com.example.deckphonephone.deck.ui
 
 import com.example.deckphonephone.deck.application.CopyTextPort
 import com.example.deckphonephone.deck.application.CopyTextResult
+import com.example.deckphonephone.deck.application.CreateBluetoothDeviceCardUseCase
 import com.example.deckphonephone.deck.application.CreateCategoryUseCase
 import com.example.deckphonephone.deck.application.CreateTextCardUseCase
 import com.example.deckphonephone.deck.application.CreateWebCardUseCase
@@ -10,14 +11,18 @@ import com.example.deckphonephone.deck.application.DeckUseCases
 import com.example.deckphonephone.deck.application.DeleteCardUseCase
 import com.example.deckphonephone.deck.application.DeleteCategoryUseCase
 import com.example.deckphonephone.deck.application.ExecuteCardUseCase
+import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
-import com.example.deckphonephone.deck.application.ThemePreferenceRepository
-import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
 import com.example.deckphonephone.deck.application.OpenUrlPort
 import com.example.deckphonephone.deck.application.OpenUrlResult
+import com.example.deckphonephone.deck.application.PairedBluetoothDevicesPort
+import com.example.deckphonephone.deck.application.PairedBluetoothDevicesResult
 import com.example.deckphonephone.deck.application.SetCardEnabledUseCase
+import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
+import com.example.deckphonephone.deck.application.ThemePreferenceRepository
+import com.example.deckphonephone.deck.application.UpdateBluetoothDeviceCardUseCase
 import com.example.deckphonephone.deck.application.UpdateCategoryUseCase
 import com.example.deckphonephone.deck.application.UpdateTextCardUseCase
 import com.example.deckphonephone.deck.application.UpdateWebCardUseCase
@@ -126,7 +131,6 @@ private class FakeDeckRepository(
     override suspend fun deleteCard(cardId: Long) = error("Not used")
 }
 
-
 private class FakeThemePreferenceRepository : ThemePreferenceRepository {
     private val darkTheme = MutableStateFlow(false)
 
@@ -147,9 +151,12 @@ private fun DeckRepository.toUseCases(): DeckUseCases {
         deleteCategory = DeleteCategoryUseCase(this),
         createTextCard = CreateTextCardUseCase(this),
         createWebCard = CreateWebCardUseCase(this),
+        createBluetoothDeviceCard = CreateBluetoothDeviceCardUseCase(this),
+        listPairedBluetoothDevices = ListPairedBluetoothDevicesUseCase(EmptyPairedBluetoothDevicesPort),
         observeCards = ObserveCardsUseCase(this),
         updateTextCard = UpdateTextCardUseCase(this),
         updateWebCard = UpdateWebCardUseCase(this),
+        updateBluetoothDeviceCard = UpdateBluetoothDeviceCardUseCase(this),
         deleteCard = DeleteCardUseCase(this),
         setCardEnabled = SetCardEnabledUseCase(this),
         executeCard = ExecuteCardUseCase(
@@ -159,6 +166,12 @@ private fun DeckRepository.toUseCases(): DeckUseCases {
         observeDarkTheme = ObserveDarkThemeUseCase(themePreferenceRepository),
         setDarkTheme = SetDarkThemeUseCase(themePreferenceRepository),
     )
+}
+
+private object EmptyPairedBluetoothDevicesPort : PairedBluetoothDevicesPort {
+    override suspend fun listPairedBluetoothDevices(): PairedBluetoothDevicesResult {
+        return PairedBluetoothDevicesResult.Success(emptyList())
+    }
 }
 
 private object AlwaysSuccessfulOpenUrlPort : OpenUrlPort {

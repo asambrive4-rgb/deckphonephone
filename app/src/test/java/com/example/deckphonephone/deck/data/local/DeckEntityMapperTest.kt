@@ -33,4 +33,44 @@ class DeckEntityMapperTest {
 
         assertEquals(CardAction.CopyText("hello"), entity.toDomain().action)
     }
+
+    @Test
+    fun `bluetooth action is stored with device fields`() {
+        val entity = newCardEntity(
+            categoryId = 1,
+            title = "Buds",
+            description = "",
+            action = CardAction.BluetoothDevice(
+                deviceName = "Buds",
+                deviceAddress = "AC:80:0A:20:CB:AF",
+            ),
+            isEnabled = true,
+        )
+
+        assertEquals("bluetooth_device", entity.actionType)
+        assertEquals("Buds", entity.bluetoothDeviceName)
+        assertEquals("AC:80:0A:20:CB:AF", entity.bluetoothDeviceAddress)
+    }
+
+    @Test
+    fun `bluetooth action is read from device fields`() {
+        val entity = ActionCardEntity(
+            id = 1,
+            categoryId = 1,
+            title = "Buds",
+            description = "",
+            actionType = "bluetooth_device",
+            bluetoothDeviceName = "Buds",
+            bluetoothDeviceAddress = "AC:80:0A:20:CB:AF",
+            isEnabled = true,
+        )
+
+        assertEquals(
+            CardAction.BluetoothDevice(
+                deviceName = "Buds",
+                deviceAddress = "AC:80:0A:20:CB:AF",
+            ),
+            entity.toDomain().action,
+        )
+    }
 }

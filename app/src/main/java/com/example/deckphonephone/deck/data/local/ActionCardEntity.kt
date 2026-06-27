@@ -31,6 +31,10 @@ data class ActionCardEntity(
     val textValue: String? = null,
     @ColumnInfo(name = "url_value")
     val urlValue: String? = null,
+    @ColumnInfo(name = "bluetooth_device_name")
+    val bluetoothDeviceName: String? = null,
+    @ColumnInfo(name = "bluetooth_device_address")
+    val bluetoothDeviceAddress: String? = null,
     @ColumnInfo(name = "is_enabled")
     val isEnabled: Boolean = true,
     @ColumnInfo(name = "created_at")

@@ -7,6 +7,8 @@ import com.example.deckphonephone.deck.application.DeckError
 import com.example.deckphonephone.deck.application.DeckResult
 import com.example.deckphonephone.deck.application.DeckUseCases
 import com.example.deckphonephone.deck.application.ExecuteCardResult
+import com.example.deckphonephone.deck.application.PairedBluetoothDevice
+import com.example.deckphonephone.deck.application.PairedBluetoothDevicesResult
 import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.CardAction
 import com.example.deckphonephone.deck.domain.DeckCategory
@@ -165,6 +167,7 @@ class DeckSettingViewModel(
                 isCardsLoading = true,
                 cardTitleInput = "",
                 cardPayloadInput = "",
+                selectedBluetoothDevice = null,
                 isCreatingCard = false,
             )
         }
@@ -193,6 +196,7 @@ class DeckSettingViewModel(
                 isCardsLoading = false,
                 cardTitleInput = "",
                 cardPayloadInput = "",
+                selectedBluetoothDevice = null,
                 isCreatingCard = false,
             )
         }
@@ -207,10 +211,68 @@ class DeckSettingViewModel(
     }
 
     fun onCardTypeChanged(type: CardType) {
-        _uiState.update {
-            it.copy(
+        _uiState.update { state ->
+            state.copy(
                 selectedCardType = type,
                 cardPayloadInput = "",
+                selectedBluetoothDevice = if (type == CardType.Bluetooth) {
+                    state.selectedBluetoothDevice
+                } else {
+                    null
+                },
+            )
+        }
+    }
+
+    fun loadPairedBluetoothDevices() {
+        _uiState.update { it.copy(isBluetoothDevicesLoading = true, message = null) }
+        viewModelScope.launch(dispatcher) {
+            when (val result = useCases.listPairedBluetoothDevices()) {
+                is PairedBluetoothDevicesResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            pairedBluetoothDevices = result.devices,
+                            isBluetoothDevicesLoading = false,
+                        )
+                    }
+                }
+
+                PairedBluetoothDevicesResult.PermissionDenied -> showBluetoothDeviceListError(
+                    "근처 기기 권한을 허용해 주세요.",
+                )
+
+                PairedBluetoothDevicesResult.BluetoothUnavailable -> showBluetoothDeviceListError(
+                    "이 기기에서 블루투스를 사용할 수 없습니다.",
+                )
+
+                PairedBluetoothDevicesResult.Failure -> showBluetoothDeviceListError(
+                    "블루투스 기기 목록을 불러오지 못했습니다.",
+                )
+            }
+        }
+    }
+
+    fun bluetoothPermissionDenied() {
+        showBluetoothDeviceListError("근처 기기 권한을 허용해 주세요.")
+    }
+
+    fun onBluetoothDeviceSelected(device: PairedBluetoothDevice) {
+        _uiState.update { state ->
+            state.copy(
+                selectedBluetoothDevice = device,
+                cardTitleInput = if (state.cardTitleInput.isBlank()) device.name else state.cardTitleInput,
+            )
+        }
+    }
+
+    fun onEditingBluetoothDeviceSelected(device: PairedBluetoothDevice) {
+        _uiState.update { state ->
+            val editingCard = state.editingCard ?: return@update state
+            state.copy(
+                editingCard = editingCard.copy(
+                    selectedBluetoothDevice = device,
+                    title = if (editingCard.title.isBlank()) device.name else editingCard.title,
+                ),
             )
         }
     }
@@ -236,6 +298,12 @@ class DeckSettingViewModel(
                     title = state.cardTitleInput,
                     rawUrl = state.cardPayloadInput,
                 )
+
+                CardType.Bluetooth -> useCases.createBluetoothDeviceCard(
+                    categoryId = categoryId,
+                    title = state.cardTitleInput,
+                    device = state.selectedBluetoothDevice,
+                )
             }
 
             when (result) {
@@ -244,6 +312,7 @@ class DeckSettingViewModel(
                         it.copy(
                             cardTitleInput = "",
                             cardPayloadInput = "",
+                            selectedBluetoothDevice = null,
                             isCreatingCard = false,
                             message = "카드를 저장했습니다.",
                         )
@@ -263,6 +332,7 @@ class DeckSettingViewModel(
                     title = card.title,
                     payload = card.action.payload(),
                     selectedCardType = card.action.cardType(),
+                    selectedBluetoothDevice = card.action.bluetoothDevice(),
                     isEnabled = card.isEnabled,
                 ),
                 message = null,
@@ -289,6 +359,11 @@ class DeckSettingViewModel(
                 editingCard = editingCard.copy(
                     selectedCardType = type,
                     payload = if (editingCard.selectedCardType == type) editingCard.payload else "",
+                    selectedBluetoothDevice = if (type == CardType.Bluetooth) {
+                        editingCard.selectedBluetoothDevice
+                    } else {
+                        null
+                    },
                 ),
             )
         }
@@ -326,6 +401,12 @@ class DeckSettingViewModel(
                     card = enabledCard,
                     title = editState.title,
                     rawUrl = editState.payload,
+                )
+
+                CardType.Bluetooth -> useCases.updateBluetoothDeviceCard(
+                    card = enabledCard,
+                    title = editState.title,
+                    device = editState.selectedBluetoothDevice,
                 )
             }
 
@@ -415,6 +496,9 @@ class DeckSettingViewModel(
                 ExecuteCardResult.CopyTextBlank -> showMessage("복사할 문구가 없습니다")
                 ExecuteCardResult.OpenUrlFailed -> showMessage("웹페이지를 열지 못했습니다.")
                 ExecuteCardResult.CopyTextFailed -> showMessage("문구를 복사하지 못했습니다.")
+                ExecuteCardResult.BluetoothActionUnsupported -> showMessage(
+                    "블루투스 연결/해제는 아직 지원하지 않습니다.",
+                )
             }
         }
     }
@@ -438,6 +522,15 @@ class DeckSettingViewModel(
         }
     }
 
+    private fun showBluetoothDeviceListError(message: String) {
+        _uiState.update {
+            it.copy(
+                isBluetoothDevicesLoading = false,
+                message = message,
+            )
+        }
+    }
+
     private fun showMessage(message: String) {
         _uiState.update { it.copy(message = message) }
     }
@@ -446,6 +539,7 @@ class DeckSettingViewModel(
         return when (this) {
             is CardAction.CopyText -> text
             is CardAction.OpenUrl -> url
+            is CardAction.BluetoothDevice -> deviceAddress
         }
     }
 
@@ -453,6 +547,19 @@ class DeckSettingViewModel(
         return when (this) {
             is CardAction.CopyText -> CardType.Text
             is CardAction.OpenUrl -> CardType.Web
+            is CardAction.BluetoothDevice -> CardType.Bluetooth
+        }
+    }
+
+    private fun CardAction.bluetoothDevice(): PairedBluetoothDevice? {
+        return when (this) {
+            is CardAction.BluetoothDevice -> PairedBluetoothDevice(
+                name = deviceName,
+                address = deviceAddress,
+            )
+
+            is CardAction.CopyText,
+            is CardAction.OpenUrl -> null
         }
     }
 
@@ -464,6 +571,8 @@ class DeckSettingViewModel(
             DeckError.UrlBlank -> "열 웹페이지 주소를 입력해 주세요."
             DeckError.InvalidUrl -> "웹 주소 형식이 올바르지 않습니다."
             DeckError.CategoryNotSelected -> "카테고리를 먼저 선택해 주세요."
+            DeckError.BluetoothDeviceNotSelected -> "블루투스 기기를 선택해 주세요."
+            DeckError.BluetoothDeviceAddressBlank -> "블루투스 기기 주소를 찾지 못했습니다."
         }
     }
 

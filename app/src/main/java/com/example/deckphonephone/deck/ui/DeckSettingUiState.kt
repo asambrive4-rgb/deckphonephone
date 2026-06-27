@@ -1,5 +1,6 @@
 package com.example.deckphonephone.deck.ui
 
+import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.DeckCategory
 
@@ -14,6 +15,9 @@ data class DeckSettingUiState(
     val cardTitleInput: String = "",
     val cardPayloadInput: String = "",
     val selectedCardType: CardType = CardType.Text,
+    val selectedBluetoothDevice: PairedBluetoothDevice? = null,
+    val pairedBluetoothDevices: List<PairedBluetoothDevice> = emptyList(),
+    val isBluetoothDevicesLoading: Boolean = false,
     val isCreatingCard: Boolean = false,
     val isDarkTheme: Boolean = false,
     val isAppSettingsOpen: Boolean = false,
@@ -33,12 +37,14 @@ data class CardEditState(
     val title: String,
     val payload: String,
     val selectedCardType: CardType,
+    val selectedBluetoothDevice: PairedBluetoothDevice?,
     val isEnabled: Boolean,
 )
 
 enum class CardType {
     Text,
     Web,
+    Bluetooth,
 }
 
 sealed interface DeleteTarget {

@@ -65,6 +65,18 @@ class ExecuteCardUseCaseTest {
         assertEquals(ExecuteCardResult.CopyTextBlank, result)
         assertEquals(emptyList<String>(), copyTextPort.copiedTexts)
     }
+
+    @Test
+    fun `bluetooth card returns unsupported without calling execution ports`() = runBlocking {
+        val card = bluetoothCard()
+
+        val result = executeCard(card)
+
+        assertEquals(ExecuteCardResult.BluetoothActionUnsupported, result)
+        assertEquals(emptyList<String>(), openUrlPort.openedUrls)
+        assertEquals(emptyList<String>(), copyTextPort.copiedTexts)
+    }
+
     @Test
     fun `disabled card does not call execution ports`() = runBlocking {
         val card = webCard(url = "https://example.com").copy(isEnabled = false)
@@ -88,6 +100,16 @@ class ExecuteCardUseCaseTest {
         categoryId = 1,
         title = "Text",
         action = CardAction.CopyText(text),
+    )
+
+    private fun bluetoothCard() = ActionCard(
+        id = 1,
+        categoryId = 1,
+        title = "Buds",
+        action = CardAction.BluetoothDevice(
+            deviceName = "Buds",
+            deviceAddress = "AC:80:0A:20:CB:AF",
+        ),
     )
 }
 
