@@ -21,6 +21,19 @@
             android:name=".deck.platform.DeckOverlayService"
             android:exported="false" />
 
+        <service
+            android:name=".deck.platform.DeckBluetoothAccessibilityService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/deck_bluetooth_accessibility_service" />
+        </service>
+
         <activity
             android:name=".DeckEntryPointRouter"
             android:exported="true"

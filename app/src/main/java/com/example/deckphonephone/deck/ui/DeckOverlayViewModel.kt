@@ -76,7 +76,7 @@ class DeckOverlayViewModel(
 
     fun executeCard(card: ActionCard) {
         scope.launch {
-            when (useCases.executeCard(card)) {
+            when (val result = useCases.executeCard(card)) {
                 ExecuteCardResult.OpenedUrl -> onFinished()
                 ExecuteCardResult.CopiedText -> {
                     onTransientMessage("복사했습니다")
@@ -87,9 +87,31 @@ class DeckOverlayViewModel(
                 ExecuteCardResult.CopyTextBlank -> showMessage("복사할 문구가 없습니다")
                 ExecuteCardResult.OpenUrlFailed -> showMessage("웹페이지를 열지 못했습니다.")
                 ExecuteCardResult.CopyTextFailed -> showMessage("문구를 복사하지 못했습니다.")
-                ExecuteCardResult.BluetoothActionUnsupported -> showMessage(
-                    "블루투스 연결/해제는 아직 지원하지 않습니다.",
-                )
+                is ExecuteCardResult.BluetoothAutomationStarted -> {
+                    onTransientMessage("Bluetooth 설정에서 ${result.deviceName}을 찾는 중입니다.")
+                    onFinished()
+                }
+
+                is ExecuteCardResult.BluetoothAccessibilityPermissionRequired -> {
+                    onTransientMessage("접근성 설정에서 DeckDeckDeck을 켠 뒤 다시 탭해 주세요.")
+                    onFinished()
+                }
+
+                ExecuteCardResult.BluetoothSettingsOpenFailed -> {
+                    showMessage("설정 화면을 열지 못했습니다.")
+                }
+
+                ExecuteCardResult.BluetoothAutomationAlreadyRunning -> {
+                    showMessage("Bluetooth 자동 실행이 이미 진행 중입니다.")
+                }
+
+                ExecuteCardResult.BluetoothDeviceAddressBlank -> {
+                    showMessage("블루투스 기기 주소를 찾지 못했습니다.")
+                }
+
+                ExecuteCardResult.BluetoothAutomationFailed -> {
+                    showMessage("블루투스 자동 실행을 시작하지 못했습니다.")
+                }
             }
         }
     }

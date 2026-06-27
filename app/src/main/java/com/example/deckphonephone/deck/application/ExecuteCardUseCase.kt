@@ -6,6 +6,7 @@ import com.example.deckphonephone.deck.domain.CardAction
 class ExecuteCardUseCase(
     private val openUrlPort: OpenUrlPort,
     private val copyTextPort: CopyTextPort,
+    private val bluetoothDeviceActionPort: BluetoothDeviceActionPort,
 ) {
     suspend operator fun invoke(card: ActionCard): ExecuteCardResult {
         if (!card.isEnabled) {
@@ -15,7 +16,7 @@ class ExecuteCardUseCase(
         return when (val action = card.action) {
             is CardAction.OpenUrl -> openUrl(action.url)
             is CardAction.CopyText -> copyText(action.text)
-            is CardAction.BluetoothDevice -> ExecuteCardResult.BluetoothActionUnsupported
+            is CardAction.BluetoothDevice -> startBluetoothDeviceAction(action)
         }
     }
 
@@ -38,6 +39,42 @@ class ExecuteCardUseCase(
         return when (copyTextPort.copyText(text)) {
             CopyTextResult.Success -> ExecuteCardResult.CopiedText
             CopyTextResult.Failure -> ExecuteCardResult.CopyTextFailed
+        }
+    }
+
+    private suspend fun startBluetoothDeviceAction(
+        action: CardAction.BluetoothDevice,
+    ): ExecuteCardResult {
+        val deviceName = action.deviceName.ifBlank { DEFAULT_BLUETOOTH_DEVICE_NAME }
+        if (action.deviceAddress.isBlank()) {
+            return ExecuteCardResult.BluetoothDeviceAddressBlank
+        }
+
+        return when (
+            bluetoothDeviceActionPort.startBluetoothDeviceAction(
+                deviceName = deviceName,
+                deviceAddress = action.deviceAddress,
+            )
+        ) {
+            BluetoothDeviceActionResult.Started -> {
+                ExecuteCardResult.BluetoothAutomationStarted(deviceName)
+            }
+
+            BluetoothDeviceActionResult.AccessibilityPermissionRequired -> {
+                ExecuteCardResult.BluetoothAccessibilityPermissionRequired(deviceName)
+            }
+
+            BluetoothDeviceActionResult.SettingsOpenFailed -> {
+                ExecuteCardResult.BluetoothSettingsOpenFailed
+            }
+
+            BluetoothDeviceActionResult.AlreadyRunning -> {
+                ExecuteCardResult.BluetoothAutomationAlreadyRunning
+            }
+
+            BluetoothDeviceActionResult.Failure -> {
+                ExecuteCardResult.BluetoothAutomationFailed
+            }
         }
     }
 }

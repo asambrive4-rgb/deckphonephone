@@ -1,5 +1,7 @@
 package com.example.deckphonephone.deck.ui
 
+import com.example.deckphonephone.deck.application.BluetoothDeviceActionPort
+import com.example.deckphonephone.deck.application.BluetoothDeviceActionResult
 import com.example.deckphonephone.deck.application.CopyTextPort
 import com.example.deckphonephone.deck.application.CopyTextResult
 import com.example.deckphonephone.deck.application.CreateBluetoothDeviceCardUseCase
@@ -162,6 +164,7 @@ private fun DeckRepository.toUseCases(): DeckUseCases {
         executeCard = ExecuteCardUseCase(
             openUrlPort = AlwaysSuccessfulOpenUrlPort,
             copyTextPort = AlwaysSuccessfulCopyTextPort,
+            bluetoothDeviceActionPort = AlwaysSuccessfulBluetoothDeviceActionPort,
         ),
         observeDarkTheme = ObserveDarkThemeUseCase(themePreferenceRepository),
         setDarkTheme = SetDarkThemeUseCase(themePreferenceRepository),
@@ -180,4 +183,11 @@ private object AlwaysSuccessfulOpenUrlPort : OpenUrlPort {
 
 private object AlwaysSuccessfulCopyTextPort : CopyTextPort {
     override suspend fun copyText(text: String): CopyTextResult = CopyTextResult.Success
+}
+
+private object AlwaysSuccessfulBluetoothDeviceActionPort : BluetoothDeviceActionPort {
+    override suspend fun startBluetoothDeviceAction(
+        deviceName: String,
+        deviceAddress: String,
+    ): BluetoothDeviceActionResult = BluetoothDeviceActionResult.Started
 }

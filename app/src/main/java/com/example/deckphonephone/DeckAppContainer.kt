@@ -22,6 +22,7 @@ import com.example.deckphonephone.deck.application.UpdateWebCardUseCase
 import com.example.deckphonephone.deck.data.local.DeckDatabase
 import com.example.deckphonephone.deck.data.local.RoomDeckRepository
 import com.example.deckphonephone.deck.data.local.SharedPreferencesThemePreferenceRepository
+import com.example.deckphonephone.deck.platform.AndroidBluetoothDeviceActionAdapter
 import com.example.deckphonephone.deck.platform.AndroidClipboardCopyTextAdapter
 import com.example.deckphonephone.deck.platform.AndroidOpenUrlAdapter
 import com.example.deckphonephone.deck.platform.AndroidPairedBluetoothDevicesAdapter
@@ -34,6 +35,7 @@ class DeckAppContainer(context: Context) {
     private val openUrlAdapter = AndroidOpenUrlAdapter(appContext)
     private val copyTextAdapter = AndroidClipboardCopyTextAdapter(appContext)
     private val pairedBluetoothDevicesAdapter = AndroidPairedBluetoothDevicesAdapter(appContext)
+    private val bluetoothDeviceActionAdapter = AndroidBluetoothDeviceActionAdapter(appContext)
 
     val useCases = DeckUseCases(
         createCategory = CreateCategoryUseCase(repository),
@@ -53,6 +55,7 @@ class DeckAppContainer(context: Context) {
         executeCard = ExecuteCardUseCase(
             openUrlPort = openUrlAdapter,
             copyTextPort = copyTextAdapter,
+            bluetoothDeviceActionPort = bluetoothDeviceActionAdapter,
         ),
         observeDarkTheme = ObserveDarkThemeUseCase(themePreferenceRepository),
         setDarkTheme = SetDarkThemeUseCase(themePreferenceRepository),

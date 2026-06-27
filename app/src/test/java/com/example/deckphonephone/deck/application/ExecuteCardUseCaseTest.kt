@@ -9,9 +9,11 @@ import org.junit.Test
 class ExecuteCardUseCaseTest {
     private val openUrlPort = FakeOpenUrlPort()
     private val copyTextPort = FakeCopyTextPort()
+    private val bluetoothDeviceActionPort = FakeBluetoothDeviceActionPort()
     private val executeCard = ExecuteCardUseCase(
         openUrlPort = openUrlPort,
         copyTextPort = copyTextPort,
+        bluetoothDeviceActionPort = bluetoothDeviceActionPort,
     )
 
     @Test
@@ -67,14 +69,65 @@ class ExecuteCardUseCaseTest {
     }
 
     @Test
-    fun `bluetooth card returns unsupported without calling execution ports`() = runBlocking {
+    fun `bluetooth card starts action through port`() = runBlocking {
         val card = bluetoothCard()
 
         val result = executeCard(card)
 
-        assertEquals(ExecuteCardResult.BluetoothActionUnsupported, result)
+        assertEquals(ExecuteCardResult.BluetoothAutomationStarted("Buds"), result)
+        assertEquals(listOf("Buds" to "AC:80:0A:20:CB:AF"), bluetoothDeviceActionPort.requests)
         assertEquals(emptyList<String>(), openUrlPort.openedUrls)
         assertEquals(emptyList<String>(), copyTextPort.copiedTexts)
+    }
+
+    @Test
+    fun `bluetooth card maps accessibility permission required result`() = runBlocking {
+        bluetoothDeviceActionPort.result = BluetoothDeviceActionResult.AccessibilityPermissionRequired
+        val card = bluetoothCard()
+
+        val result = executeCard(card)
+
+        assertEquals(ExecuteCardResult.BluetoothAccessibilityPermissionRequired("Buds"), result)
+    }
+
+    @Test
+    fun `bluetooth card maps settings open failure result`() = runBlocking {
+        bluetoothDeviceActionPort.result = BluetoothDeviceActionResult.SettingsOpenFailed
+        val card = bluetoothCard()
+
+        val result = executeCard(card)
+
+        assertEquals(ExecuteCardResult.BluetoothSettingsOpenFailed, result)
+    }
+
+    @Test
+    fun `bluetooth card maps already running result`() = runBlocking {
+        bluetoothDeviceActionPort.result = BluetoothDeviceActionResult.AlreadyRunning
+        val card = bluetoothCard()
+
+        val result = executeCard(card)
+
+        assertEquals(ExecuteCardResult.BluetoothAutomationAlreadyRunning, result)
+    }
+
+    @Test
+    fun `bluetooth card maps failure result`() = runBlocking {
+        bluetoothDeviceActionPort.result = BluetoothDeviceActionResult.Failure
+        val card = bluetoothCard()
+
+        val result = executeCard(card)
+
+        assertEquals(ExecuteCardResult.BluetoothAutomationFailed, result)
+    }
+
+    @Test
+    fun `bluetooth card returns blank address without calling port`() = runBlocking {
+        val card = bluetoothCard(address = " ")
+
+        val result = executeCard(card)
+
+        assertEquals(ExecuteCardResult.BluetoothDeviceAddressBlank, result)
+        assertEquals(emptyList<Pair<String, String>>(), bluetoothDeviceActionPort.requests)
     }
 
     @Test
@@ -86,6 +139,7 @@ class ExecuteCardUseCaseTest {
         assertEquals(ExecuteCardResult.DisabledCard, result)
         assertEquals(emptyList<String>(), openUrlPort.openedUrls)
         assertEquals(emptyList<String>(), copyTextPort.copiedTexts)
+        assertEquals(emptyList<Pair<String, String>>(), bluetoothDeviceActionPort.requests)
     }
 
     private fun webCard(url: String) = ActionCard(
@@ -102,13 +156,16 @@ class ExecuteCardUseCaseTest {
         action = CardAction.CopyText(text),
     )
 
-    private fun bluetoothCard() = ActionCard(
+    private fun bluetoothCard(
+        name: String = "Buds",
+        address: String = "AC:80:0A:20:CB:AF",
+    ) = ActionCard(
         id = 1,
         categoryId = 1,
         title = "Buds",
         action = CardAction.BluetoothDevice(
-            deviceName = "Buds",
-            deviceAddress = "AC:80:0A:20:CB:AF",
+            deviceName = name,
+            deviceAddress = address,
         ),
     )
 }
@@ -129,6 +186,19 @@ private class FakeCopyTextPort : CopyTextPort {
 
     override suspend fun copyText(text: String): CopyTextResult {
         copiedTexts += text
+        return result
+    }
+}
+
+private class FakeBluetoothDeviceActionPort : BluetoothDeviceActionPort {
+    val requests = mutableListOf<Pair<String, String>>()
+    var result: BluetoothDeviceActionResult = BluetoothDeviceActionResult.Started
+
+    override suspend fun startBluetoothDeviceAction(
+        deviceName: String,
+        deviceAddress: String,
+    ): BluetoothDeviceActionResult {
+        requests += deviceName to deviceAddress
         return result
     }
 }
