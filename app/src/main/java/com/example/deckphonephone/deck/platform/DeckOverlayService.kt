@@ -19,6 +19,8 @@ import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.example.deckphonephone.DeckAppContainer
 import com.example.deckphonephone.MainActivity
+import com.example.deckphonephone.deck.application.DeckSurface
+import com.example.deckphonephone.deck.application.DeckSurfacePolicy
 import com.example.deckphonephone.deck.ui.DeckOverlayController
 import com.example.deckphonephone.deck.ui.DeckOverlayScreen
 import com.example.deckphonephone.ui.theme.DeckphonephoneTheme
@@ -106,11 +108,17 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
     }
 
     private fun openSettings() {
+        if (isFinishingOverlay) return
+        isFinishingOverlay = true
+        if (!DeckSurfacePolicy.canShowTogether(DeckSurface.Overlay, DeckSurface.Settings)) {
+            removeOverlay()
+        }
         val intent = MainActivity.createSettingIntent(this).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
         startActivity(intent)
-        finishOverlay()
+        stopSelf()
     }
 
     private fun finishOverlay() {
