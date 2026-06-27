@@ -17,7 +17,6 @@ class DeckBluetoothAccessibilityService : AccessibilityService() {
         Unit
     }
     private var isRetryScheduled = false
-    private var isResultScheduled = false
     private var isClickInProgress = false
 
     override fun onCreate() {
@@ -90,7 +89,7 @@ class DeckBluetoothAccessibilityService : AccessibilityService() {
         stateBeforeClick: BluetoothSettingsDeviceState,
     ) {
         if (candidate.performAction(AccessibilityNodeInfo.ACTION_CLICK)) {
-            markClickedAndScheduleResult(stateBeforeClick)
+            markClickedAndReturn(stateBeforeClick)
             return
         }
 
@@ -98,7 +97,7 @@ class DeckBluetoothAccessibilityService : AccessibilityService() {
             node = candidate,
             onCompleted = {
                 isClickInProgress = false
-                markClickedAndScheduleResult(stateBeforeClick)
+                markClickedAndReturn(stateBeforeClick)
             },
             onCancelled = {
                 isClickInProgress = false
@@ -147,9 +146,11 @@ class DeckBluetoothAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun markClickedAndScheduleResult(stateBeforeClick: BluetoothSettingsDeviceState) {
+    private fun markClickedAndReturn(stateBeforeClick: BluetoothSettingsDeviceState) {
         BluetoothSettingsAutomationCoordinator.markClicked(stateBeforeClick)?.let {
-            scheduleClickResult(it)
+            showToast("Bluetooth 기기를 실행했습니다.")
+            performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+            BluetoothSettingsAutomationCoordinator.finish()
         }
     }
 
@@ -168,51 +169,6 @@ class DeckBluetoothAccessibilityService : AccessibilityService() {
             },
             RETRY_DELAY_MS,
         )
-    }
-
-    private fun scheduleClickResult(clickedRequest: BluetoothSettingsClickedRequest) {
-        if (isResultScheduled) return
-        isResultScheduled = true
-        handler.postDelayed(
-            {
-                isResultScheduled = false
-                showToast(resolveClickResultMessage(clickedRequest))
-                BluetoothSettingsAutomationCoordinator.finish()
-            },
-            BluetoothSettingsAutomationCoordinator.CLICK_RESULT_DELAY_MS,
-        )
-    }
-
-    private fun resolveClickResultMessage(
-        clickedRequest: BluetoothSettingsClickedRequest,
-    ): String {
-        val request = clickedRequest.request
-        val root = rootInActiveWindow ?: return clickedFallbackMessage()
-        val match = BluetoothSettingsNodeMatcher.findTarget(
-            candidates = collectCandidates(root),
-            deviceName = request.deviceName,
-            deviceAddress = request.deviceAddress,
-        )
-        val stateAfterClick = (match as? BluetoothSettingsNodeMatch.Found)?.state
-            ?: return clickedFallbackMessage()
-
-        return when {
-            clickedRequest.stateBeforeClick == BluetoothSettingsDeviceState.Disconnected &&
-                stateAfterClick == BluetoothSettingsDeviceState.Connected -> {
-                "${request.deviceName}에 연결했습니다."
-            }
-
-            clickedRequest.stateBeforeClick == BluetoothSettingsDeviceState.Connected &&
-                stateAfterClick == BluetoothSettingsDeviceState.Disconnected -> {
-                "${request.deviceName} 연결을 해제했습니다."
-            }
-
-            else -> clickedFallbackMessage()
-        }
-    }
-
-    private fun clickedFallbackMessage(): String {
-        return "기기를 눌렀습니다. 설정 화면에서 상태를 확인해 주세요."
     }
 
     private fun collectCandidates(

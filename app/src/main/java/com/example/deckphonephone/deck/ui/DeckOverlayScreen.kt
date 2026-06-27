@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -84,7 +83,7 @@ private fun DeckOverlayScreenContent(
     val selectedCategory = uiState.categories.firstOrNull { it.id == uiState.selectedCategoryId }
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Surface(
@@ -94,7 +93,6 @@ private fun DeckOverlayScreenContent(
             shadowElevation = 10.dp,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp)
                 .heightIn(min = 220.dp, max = 560.dp),
         ) {
             Box {

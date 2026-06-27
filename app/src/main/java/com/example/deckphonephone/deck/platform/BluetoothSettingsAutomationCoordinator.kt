@@ -13,7 +13,6 @@ data class BluetoothSettingsClickedRequest(
 )
 
 object BluetoothSettingsAutomationCoordinator {
-    const val CLICK_RESULT_DELAY_MS = 1_500L
     private const val REQUEST_TIMEOUT_MS = 15_000L
 
     private var pendingRequest: PendingRequest? = null

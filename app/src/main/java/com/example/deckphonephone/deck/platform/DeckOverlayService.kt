@@ -31,6 +31,7 @@ import com.example.deckphonephone.deck.application.DeckSurfacePolicy
 import com.example.deckphonephone.deck.ui.DeckOverlayScreen
 import com.example.deckphonephone.deck.ui.DeckOverlayViewModel
 import com.example.deckphonephone.ui.theme.DeckphonephoneTheme
+import kotlin.math.roundToInt
 
 class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
@@ -113,24 +114,34 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
             composeView,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
             ),
         )
 
         val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
+            overlayPanelWidthPx(),
+            WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT,
         ).apply {
-            gravity = Gravity.TOP or Gravity.START
+            gravity = Gravity.CENTER
         }
 
         if (!addOverlayView(rootView, params)) return
 
         overlayView = rootView
         rootView.post { rootView.requestFocus() }
+    }
+
+    private fun overlayPanelWidthPx(): Int {
+        val density = resources.displayMetrics.density
+        val screenWidth = resources.displayMetrics.widthPixels
+        val horizontalMargin = (OverlayHorizontalMarginDp * density).roundToInt()
+        val maxPanelWidth = (OverlayMaxWidthDp * density).roundToInt()
+        val availableWidth = (screenWidth - horizontalMargin * 2).coerceAtLeast(1)
+        return availableWidth.coerceAtMost(maxPanelWidth)
     }
 
     private fun addOverlayView(
@@ -225,6 +236,9 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
     }
 
     companion object {
+        private const val OverlayHorizontalMarginDp = 18
+        private const val OverlayMaxWidthDp = 560
+
         fun start(context: Context) {
             context.startService(Intent(context, DeckOverlayService::class.java))
         }
