@@ -152,6 +152,7 @@ private fun DeckSettingScreenContent(
         if (selectedCategory == null) {
             HomeScreen(
                 categories = uiState.categories,
+                isLoading = uiState.isCategoriesLoading,
                 categoryNameInput = uiState.categoryNameInput,
                 onCategoryNameChanged = onCategoryNameChanged,
                 onCreateCategory = onCreateCategory,
@@ -164,6 +165,7 @@ private fun DeckSettingScreenContent(
             CategoryDetailScreen(
                 category = selectedCategory,
                 cards = uiState.cards,
+                isCardsLoading = uiState.isCardsLoading,
                 cardTitleInput = uiState.cardTitleInput,
                 cardPayloadInput = uiState.cardPayloadInput,
                 selectedCardType = uiState.selectedCardType,
@@ -213,6 +215,7 @@ private fun DeckSettingScreenContent(
 @Composable
 private fun HomeScreen(
     categories: List<DeckCategory>,
+    isLoading: Boolean,
     categoryNameInput: String,
     onCategoryNameChanged: (String) -> Unit,
     onCreateCategory: () -> Unit,
@@ -247,19 +250,23 @@ private fun HomeScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 132.dp),
-            contentPadding = PaddingValues(bottom = 32.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            items(categories, key = { it.id }) { category ->
-                CategoryCard(
-                    category = category,
-                    onClick = { onCategorySelected(category.id) },
-                    onEdit = { onEditCategory(category) },
-                    onDelete = { onDeleteCategory(category) },
-                )
+        if (isLoading) {
+            StatusMessage(text = "불러오는 중입니다")
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 132.dp),
+                contentPadding = PaddingValues(bottom = 32.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(categories, key = { it.id }) { category ->
+                    CategoryCard(
+                        category = category,
+                        onClick = { onCategorySelected(category.id) },
+                        onEdit = { onEditCategory(category) },
+                        onDelete = { onDeleteCategory(category) },
+                    )
+                }
             }
         }
     }
@@ -269,6 +276,7 @@ private fun HomeScreen(
 private fun CategoryDetailScreen(
     category: DeckCategory,
     cards: List<ActionCard>,
+    isCardsLoading: Boolean,
     cardTitleInput: String,
     cardPayloadInput: String,
     selectedCardType: CardType,
@@ -304,20 +312,24 @@ private fun CategoryDetailScreen(
             onCreateCard = onCreateCard,
         )
         Spacer(modifier = Modifier.height(16.dp))
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 132.dp),
-            contentPadding = PaddingValues(bottom = 32.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            items(cards, key = { it.id }) { card ->
-                ActionCardView(
-                    card = card,
-                    onClick = onCardClicked,
-                    onEdit = { onEditCard(card) },
-                    onToggleEnabled = { onToggleCardEnabled(card) },
-                    onDelete = { onDeleteCard(card) },
-                )
+        if (isCardsLoading) {
+            StatusMessage(text = "불러오는 중입니다")
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 132.dp),
+                contentPadding = PaddingValues(bottom = 32.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(cards, key = { it.id }) { card ->
+                    ActionCardView(
+                        card = card,
+                        onClick = onCardClicked,
+                        onEdit = { onEditCard(card) },
+                        onToggleEnabled = { onToggleCardEnabled(card) },
+                        onDelete = { onDeleteCard(card) },
+                    )
+                }
             }
         }
     }
@@ -379,5 +391,21 @@ private fun CardForm(
         ) {
             Text("카드 추가")
         }
+    }
+}
+
+@Composable
+private fun StatusMessage(text: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp),
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
     }
 }

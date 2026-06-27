@@ -3,6 +3,7 @@ package com.example.deckphonephone.deck.ui
 import com.example.deckphonephone.deck.application.DeckUseCases
 import com.example.deckphonephone.deck.application.ExecuteCardResult
 import com.example.deckphonephone.deck.domain.ActionCard
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -17,8 +18,9 @@ class DeckOverlayViewModel(
     private val useCases: DeckUseCases,
     private val onFinished: () -> Unit,
     private val onTransientMessage: (String) -> Unit,
+    dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val _uiState = MutableStateFlow(DeckOverlayUiState())
     val uiState = _uiState.asStateFlow()
 
@@ -28,7 +30,10 @@ class DeckOverlayViewModel(
         scope.launch {
             useCases.observeCategories().collect { categories ->
                 _uiState.update { state ->
-                    state.copy(categories = categories)
+                    state.copy(
+                        categories = categories,
+                        isCategoriesLoading = false,
+                    )
                 }
             }
         }
@@ -39,6 +44,7 @@ class DeckOverlayViewModel(
             it.copy(
                 selectedCategoryId = categoryId,
                 cards = emptyList(),
+                isCardsLoading = true,
                 message = null,
             )
         }
@@ -46,7 +52,12 @@ class DeckOverlayViewModel(
         cardsJob?.cancel()
         cardsJob = scope.launch {
             useCases.observeCards(categoryId).collect { cards ->
-                _uiState.update { it.copy(cards = cards) }
+                _uiState.update {
+                    it.copy(
+                        cards = cards,
+                        isCardsLoading = false,
+                    )
+                }
             }
         }
     }
@@ -57,6 +68,10 @@ class DeckOverlayViewModel(
         } else {
             leaveCategory()
         }
+    }
+
+    fun close() {
+        onFinished()
     }
 
     fun executeCard(card: ActionCard) {
@@ -91,6 +106,7 @@ class DeckOverlayViewModel(
             it.copy(
                 selectedCategoryId = null,
                 cards = emptyList(),
+                isCardsLoading = false,
                 message = null,
             )
         }

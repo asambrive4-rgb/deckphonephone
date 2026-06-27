@@ -42,17 +42,17 @@ class DeckEntryPointRouter : ComponentActivity() {
         super.onStop()
         if (shouldCloseSettingsAfterStop()) {
             currentSurface = null
-            finishAndRemoveTask()
+            closeRouterTask()
         }
     }
 
     private fun handleEntryPoint(intent: Intent?) {
-        when (DeckSurfacePolicy.effectForEntryPoint(intent.toSurfaceEntryPoint())) {
+        when (DeckSurfacePolicy.effectForEntryPoint(currentSurface, intent.toSurfaceEntryPoint())) {
             DeckSurfaceEffect.ShowSettings -> showSettingScreen()
-            DeckSurfaceEffect.ShowOverlay -> launchOverlayOrPermissionSettings()
-            DeckSurfaceEffect.KeepSettings,
-            DeckSurfaceEffect.CloseSettings,
-            DeckSurfaceEffect.CloseSettingsThenShowOverlay -> Unit
+            DeckSurfaceEffect.ShowOverlay,
+            DeckSurfaceEffect.CloseSettingsThenShowOverlay -> launchOverlayOrPermissionSettings()
+            DeckSurfaceEffect.CloseSettings -> closeRouterTask()
+            DeckSurfaceEffect.KeepSettings -> Unit
         }
     }
 
@@ -91,7 +91,7 @@ class DeckEntryPointRouter : ComponentActivity() {
         if (Settings.canDrawOverlays(this)) {
             DeckOverlayService.start(this)
             currentSurface = null
-            finishAndRemoveTask()
+            closeRouterTask()
         } else {
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -99,8 +99,23 @@ class DeckEntryPointRouter : ComponentActivity() {
             )
             startActivity(intent)
             currentSurface = null
-            finish()
+            closeRouter()
         }
+    }
+
+    private fun closeRouterTask() {
+        finishAndRemoveTask()
+        disableTransitionAnimation()
+    }
+
+    private fun closeRouter() {
+        finish()
+        disableTransitionAnimation()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun disableTransitionAnimation() {
+        overridePendingTransition(0, 0)
     }
 
     private fun shouldCloseSettingsAfterStop(): Boolean {

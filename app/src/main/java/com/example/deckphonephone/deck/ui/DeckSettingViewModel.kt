@@ -10,6 +10,8 @@ import com.example.deckphonephone.deck.application.ExecuteCardResult
 import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.CardAction
 import com.example.deckphonephone.deck.domain.DeckCategory
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +20,7 @@ import kotlinx.coroutines.launch
 
 class DeckSettingViewModel(
     private val useCases: DeckUseCases,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(DeckSettingUiState())
     val uiState = _uiState.asStateFlow()
@@ -25,10 +28,13 @@ class DeckSettingViewModel(
     private var cardsJob: Job? = null
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             useCases.observeCategories().collect { categories ->
                 _uiState.update { state ->
-                    state.copy(categories = categories)
+                    state.copy(
+                        categories = categories,
+                        isCategoriesLoading = false,
+                    )
                 }
             }
         }
@@ -40,7 +46,7 @@ class DeckSettingViewModel(
 
     fun createCategory() {
         val name = _uiState.value.categoryNameInput
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             when (val result = useCases.createCategory(name)) {
                 is DeckResult.Success -> {
                     _uiState.update {
@@ -89,7 +95,7 @@ class DeckSettingViewModel(
             return
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             when (val result = useCases.updateCategory(category, editState.name)) {
                 is DeckResult.Success -> {
                     _uiState.update {
@@ -119,15 +125,21 @@ class DeckSettingViewModel(
             it.copy(
                 selectedCategoryId = categoryId,
                 cards = emptyList(),
+                isCardsLoading = true,
                 cardTitleInput = "",
                 cardPayloadInput = "",
             )
         }
 
         cardsJob?.cancel()
-        cardsJob = viewModelScope.launch {
+        cardsJob = viewModelScope.launch(dispatcher) {
             useCases.observeCards(categoryId).collect { cards ->
-                _uiState.update { it.copy(cards = cards) }
+                _uiState.update {
+                    it.copy(
+                        cards = cards,
+                        isCardsLoading = false,
+                    )
+                }
             }
         }
     }
@@ -139,6 +151,7 @@ class DeckSettingViewModel(
             it.copy(
                 selectedCategoryId = null,
                 cards = emptyList(),
+                isCardsLoading = false,
                 cardTitleInput = "",
                 cardPayloadInput = "",
             )
@@ -170,7 +183,7 @@ class DeckSettingViewModel(
             return
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             val result = when (state.selectedCardType) {
                 CardType.Text -> useCases.createTextCard(
                     categoryId = categoryId,
@@ -259,7 +272,7 @@ class DeckSettingViewModel(
             return
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             val enabledCard = card.copy(isEnabled = editState.isEnabled)
             val result = when (editState.selectedCardType) {
                 CardType.Text -> useCases.updateTextCard(
@@ -300,7 +313,7 @@ class DeckSettingViewModel(
     }
 
     fun toggleCardEnabled(card: ActionCard) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             val updatedCard = useCases.setCardEnabled(
                 card = card,
                 isEnabled = !card.isEnabled,
@@ -321,7 +334,7 @@ class DeckSettingViewModel(
 
     fun confirmDelete() {
         val target = _uiState.value.deleteTarget ?: return
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             when (target) {
                 is DeleteTarget.Category -> {
                     if (_uiState.value.selectedCategoryId == target.category.id) {
@@ -353,7 +366,7 @@ class DeckSettingViewModel(
     }
 
     fun executeCard(card: ActionCard) {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatcher) {
             when (useCases.executeCard(card)) {
                 ExecuteCardResult.OpenedUrl -> Unit
                 ExecuteCardResult.CopiedText -> showMessage("복사했습니다")
