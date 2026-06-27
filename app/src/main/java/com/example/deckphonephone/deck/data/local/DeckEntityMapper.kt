@@ -4,6 +4,7 @@ import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.CardAction
 import com.example.deckphonephone.deck.domain.DeckCategory
 
+private const val ACTION_COPY_TEXT = "copy_text"
 private const val ACTION_TEXT_PASTE = "text_paste"
 private const val ACTION_OPEN_URL = "open_url"
 
@@ -20,7 +21,9 @@ fun ActionCardEntity.toDomain() = ActionCard(
     title = title,
     description = description,
     action = when (actionType) {
-        ACTION_TEXT_PASTE -> CardAction.TextPaste(textValue.orEmpty())
+        ACTION_COPY_TEXT,
+        ACTION_TEXT_PASTE -> CardAction.CopyText(textValue.orEmpty())
+
         ACTION_OPEN_URL -> CardAction.OpenUrl(urlValue.orEmpty())
         else -> error("Unknown card action type: $actionType")
     },
@@ -44,11 +47,11 @@ fun newCardEntity(
     action: CardAction,
     isEnabled: Boolean,
 ) = when (action) {
-    is CardAction.TextPaste -> ActionCardEntity(
+    is CardAction.CopyText -> ActionCardEntity(
         categoryId = categoryId,
         title = title,
         description = description,
-        actionType = ACTION_TEXT_PASTE,
+        actionType = ACTION_COPY_TEXT,
         textValue = action.text,
         isEnabled = isEnabled,
     )

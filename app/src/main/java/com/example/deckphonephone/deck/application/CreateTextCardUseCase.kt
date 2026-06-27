@@ -22,7 +22,7 @@ class CreateTextCardUseCase(
         val card = repository.createCard(
             categoryId = categoryId,
             title = trimmedTitle,
-            action = CardAction.TextPaste(text),
+            action = CardAction.CopyText(text),
         )
         return DeckResult.Success(card)
     }

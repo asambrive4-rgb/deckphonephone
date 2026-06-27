@@ -8,10 +8,10 @@ import org.junit.Test
 
 class ExecuteCardUseCaseTest {
     private val openUrlPort = FakeOpenUrlPort()
-    private val pasteTextPort = FakePasteTextPort()
+    private val copyTextPort = FakeCopyTextPort()
     private val executeCard = ExecuteCardUseCase(
         openUrlPort = openUrlPort,
-        pasteTextPort = pasteTextPort,
+        copyTextPort = copyTextPort,
     )
 
     @Test
@@ -36,13 +36,24 @@ class ExecuteCardUseCaseTest {
     }
 
     @Test
-    fun `text card returns deferred result while paste path is undecided`() = runBlocking {
+    fun `text card copies text through port`() = runBlocking {
         val card = textCard(text = "hello")
 
         val result = executeCard(card)
 
-        assertEquals(ExecuteCardResult.PasteTextDeferred, result)
-        assertEquals(listOf("hello"), pasteTextPort.pastedTexts)
+        assertEquals(ExecuteCardResult.CopiedText, result)
+        assertEquals(listOf("hello"), copyTextPort.copiedTexts)
+    }
+
+    @Test
+    fun `text card returns failure when text cannot be copied`() = runBlocking {
+        copyTextPort.result = CopyTextResult.Failure
+        val card = textCard(text = "hello")
+
+        val result = executeCard(card)
+
+        assertEquals(ExecuteCardResult.CopyTextFailed, result)
+        assertEquals(listOf("hello"), copyTextPort.copiedTexts)
     }
 
     @Test
@@ -53,7 +64,7 @@ class ExecuteCardUseCaseTest {
 
         assertEquals(ExecuteCardResult.DisabledCard, result)
         assertEquals(emptyList<String>(), openUrlPort.openedUrls)
-        assertEquals(emptyList<String>(), pasteTextPort.pastedTexts)
+        assertEquals(emptyList<String>(), copyTextPort.copiedTexts)
     }
 
     private fun webCard(url: String) = ActionCard(
@@ -67,7 +78,7 @@ class ExecuteCardUseCaseTest {
         id = 1,
         categoryId = 1,
         title = "Text",
-        action = CardAction.TextPaste(text),
+        action = CardAction.CopyText(text),
     )
 }
 
@@ -81,12 +92,12 @@ private class FakeOpenUrlPort : OpenUrlPort {
     }
 }
 
-private class FakePasteTextPort : PasteTextPort {
-    val pastedTexts = mutableListOf<String>()
-    var result: PasteTextResult = PasteTextResult.Deferred
+private class FakeCopyTextPort : CopyTextPort {
+    val copiedTexts = mutableListOf<String>()
+    var result: CopyTextResult = CopyTextResult.Success
 
-    override suspend fun pasteText(text: String): PasteTextResult {
-        pastedTexts += text
+    override suspend fun copyText(text: String): CopyTextResult {
+        copiedTexts += text
         return result
     }
 }

@@ -1,5 +1,6 @@
 package com.example.deckphonephone.deck.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -41,8 +42,9 @@ import com.example.deckphonephone.deck.domain.CardAction
 import com.example.deckphonephone.deck.domain.DeckCategory
 
 @Composable
-fun DeckScreen(
-    viewModel: DeckViewModel,
+fun DeckSettingScreen(
+    viewModel: DeckSettingViewModel,
+    onExit: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -55,7 +57,16 @@ fun DeckScreen(
         }
     }
 
-    DeckScreenContent(
+    
+    BackHandler {
+        if (uiState.selectedCategoryId == null) {
+            onExit()
+        } else {
+            viewModel.leaveCategory()
+        }
+    }
+
+    DeckSettingScreenContent(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onCategoryNameChanged = viewModel::onCategoryNameChanged,
@@ -73,8 +84,8 @@ fun DeckScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DeckScreenContent(
-    uiState: DeckUiState,
+private fun DeckSettingScreenContent(
+    uiState: DeckSettingUiState,
     snackbarHostState: SnackbarHostState,
     onCategoryNameChanged: (String) -> Unit,
     onCreateCategory: () -> Unit,
@@ -277,7 +288,7 @@ private fun CardForm(
             label = {
                 Text(
                     if (selectedCardType == CardType.Text) {
-                        "붙여넣을 문구"
+                        "복사할 문구"
                     } else {
                         "열 웹페이지 주소"
                     },
@@ -372,7 +383,7 @@ private fun ActionCardView(
 
 private fun CardAction.label(): String {
     return when (this) {
-        is CardAction.TextPaste -> "문구"
+        is CardAction.CopyText -> "문구"
         is CardAction.OpenUrl -> "웹사이트"
     }
 }

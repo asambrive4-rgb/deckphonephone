@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class DeckViewModel(
+class DeckSettingViewModel(
     private val useCases: DeckUseCases,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(DeckUiState())
+    private val _uiState = MutableStateFlow(DeckSettingUiState())
     val uiState = _uiState.asStateFlow()
 
     private var cardsJob: Job? = null
@@ -145,11 +145,10 @@ class DeckViewModel(
         viewModelScope.launch {
             when (useCases.executeCard(card)) {
                 ExecuteCardResult.OpenedUrl -> Unit
-                ExecuteCardResult.PastedText -> showMessage("붙여넣음")
-                ExecuteCardResult.PasteTextDeferred -> showMessage("문구 붙여넣기 방식은 다음 구획에서 검토합니다.")
+                ExecuteCardResult.CopiedText -> showMessage("복사했습니다")
                 ExecuteCardResult.DisabledCard -> showMessage("비활성화된 카드입니다.")
                 ExecuteCardResult.OpenUrlFailed -> showMessage("웹페이지를 열지 못했습니다.")
-                ExecuteCardResult.PasteTextFailed -> showMessage("문구를 붙여넣지 못했습니다.")
+                ExecuteCardResult.CopyTextFailed -> showMessage("문구를 복사하지 못했습니다.")
             }
         }
     }
@@ -170,7 +169,7 @@ class DeckViewModel(
         return when (this) {
             DeckError.CategoryNameBlank -> "카테고리 이름을 입력해 주세요."
             DeckError.CardTitleBlank -> "슬롯 이름을 입력해 주세요."
-            DeckError.TextBlank -> "붙여넣을 문구를 입력해 주세요."
+            DeckError.TextBlank -> "복사할 문구를 입력해 주세요."
             DeckError.UrlBlank -> "열 웹페이지 주소를 입력해 주세요."
             DeckError.InvalidUrl -> "웹 주소 형식이 올바르지 않습니다."
             DeckError.CategoryNotSelected -> "카테고리를 먼저 선택해 주세요."
@@ -182,8 +181,8 @@ class DeckViewModel(
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(DeckViewModel::class.java)) {
-                return DeckViewModel(useCases) as T
+            if (modelClass.isAssignableFrom(DeckSettingViewModel::class.java)) {
+                return DeckSettingViewModel(useCases) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
