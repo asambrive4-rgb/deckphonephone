@@ -25,18 +25,18 @@ Quick Tap Action
 
 메인 테마 색은 `#a1c6ea`를 기준으로 한다.
 
-| 역할 | 색상 | 용도 |
-|---|---|---|
-| Main | `#a1c6ea` | 주요 브랜드 색, 선택 상태, 주요 버튼 |
-| Background | `#f6faff` | 앱 전체 배경 |
-| Surface | `#ffffff` | 카드, 입력 영역, 시트 |
-| Surface Subtle | `#eaf4ff` | 빈 카드, 보조 영역, 선택 전 상태 |
-| Text Primary | `#1f2a37` | 주요 텍스트 |
-| Text Secondary | `#5f6f82` | 설명, 라벨, 보조 텍스트 |
-| Accent | `#f7c873` | 강조 액션, 작은 포인트 |
-| Success | `#72c7a5` | 성공 상태 |
-| Error | `#f28b82` | 오류 상태 |
-| Border | `#c8dced` | 카드 경계, 구분선 |
+| 역할             | 색상        | 용도                     |
+| -------------- | --------- | ---------------------- |
+| Main           | `#a1c6ea` | 주요 브랜드 색, 선택 상태, 주요 버튼 |
+| Background     | `#f6faff` | 앱 전체 배경                |
+| Surface        | `#ffffff` | 카드, 입력 영역, 시트          |
+| Surface Subtle | `#eaf4ff` | 빈 카드, 보조 영역, 선택 전 상태   |
+| Text Primary   | `#1f2a37` | 주요 텍스트                 |
+| Text Secondary | `#5f6f82` | 설명, 라벨, 보조 텍스트         |
+| Accent         | `#f7c873` | 강조 액션, 작은 포인트          |
+| Success        | `#72c7a5` | 성공 상태                  |
+| Error          | `#f28b82` | 오류 상태                  |
+| Border         | `#c8dced` | 카드 경계, 구분선             |
 
 ### 1.3 색상 사용 원칙
 
