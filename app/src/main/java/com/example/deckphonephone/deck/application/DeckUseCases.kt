@@ -13,4 +13,6 @@ data class DeckUseCases(
     val deleteCard: DeleteCardUseCase,
     val setCardEnabled: SetCardEnabledUseCase,
     val executeCard: ExecuteCardUseCase,
+    val observeDarkTheme: ObserveDarkThemeUseCase,
+    val setDarkTheme: SetDarkThemeUseCase,
 )

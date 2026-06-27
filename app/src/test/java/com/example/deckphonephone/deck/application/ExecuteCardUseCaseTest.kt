@@ -57,6 +57,15 @@ class ExecuteCardUseCaseTest {
     }
 
     @Test
+    fun `text card returns blank result without calling port when text is blank`() = runBlocking {
+        val card = textCard(text = " ")
+
+        val result = executeCard(card)
+
+        assertEquals(ExecuteCardResult.CopyTextBlank, result)
+        assertEquals(emptyList<String>(), copyTextPort.copiedTexts)
+    }
+    @Test
     fun `disabled card does not call execution ports`() = runBlocking {
         val card = webCard(url = "https://example.com").copy(isEnabled = false)
 

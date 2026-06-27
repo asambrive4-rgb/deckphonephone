@@ -1,18 +1,13 @@
 package com.example.deckphonephone.deck.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,11 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
 import com.example.deckphonephone.deck.domain.DeckCategory
 
 @Composable
@@ -40,34 +32,17 @@ internal fun CategoryCard(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    ElevatedCard(
+    DeckCardSurface(
         onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
         modifier = Modifier.height(96.dp),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 14.dp, top = 14.dp, end = 48.dp, bottom = 14.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = category.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = "카테고리",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            DeckCardTextContent(
+                title = category.name,
+                label = "카테고리",
+                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 40.dp),
+            )
             Box(modifier = Modifier.align(Alignment.TopEnd)) {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
@@ -109,47 +84,27 @@ internal fun ActionCardView(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val actionLabel = if (card.isEnabled) {
-        card.action.label()
+        card.action.deckLabel()
     } else {
-        "비활성 · ${card.action.label()}"
+        "비활성 · ${card.action.deckLabel()}"
     }
 
-    ElevatedCard(
+    DeckCardSurface(
         onClick = { onClick(card) },
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        modifier = Modifier
-            .height(112.dp)
-            .alpha(if (card.isEnabled) 1f else 0.48f),
+        modifier = Modifier.height(112.dp),
+        enabled = card.isEnabled,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 14.dp, top = 14.dp, end = 48.dp, bottom = 14.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = card.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = actionLabel,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (card.isEnabled) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            DeckCardTextContent(
+                title = card.title,
+                label = actionLabel,
+                labelColor = if (card.isEnabled) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.padding(end = 40.dp),
+            )
             Box(modifier = Modifier.align(Alignment.TopEnd)) {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
@@ -187,12 +142,5 @@ internal fun ActionCardView(
                 }
             }
         }
-    }
-}
-
-private fun CardAction.label(): String {
-    return when (this) {
-        is CardAction.CopyText -> "문구"
-        is CardAction.OpenUrl -> "웹사이트"
     }
 }

@@ -2,12 +2,18 @@ package com.example.deckphonephone
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -17,6 +23,7 @@ import com.example.deckphonephone.deck.application.DeckSurfaceEffect
 import com.example.deckphonephone.deck.application.DeckSurfaceEntryPoint
 import com.example.deckphonephone.deck.application.DeckSurfacePolicy
 import com.example.deckphonephone.deck.platform.DeckOverlayService
+import com.example.deckphonephone.deck.ui.DeckOverlayPermissionScreen
 import com.example.deckphonephone.deck.ui.DeckSettingScreen
 import com.example.deckphonephone.deck.ui.DeckSettingViewModel
 import com.example.deckphonephone.ui.theme.DeckphonephoneTheme
@@ -26,6 +33,7 @@ class DeckEntryPointRouter : ComponentActivity() {
         DeckAppContainer(applicationContext)
     }
     private var currentSurface: DeckSurface? = null
+    private var isWaitingForOverlayPermissionResult = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +44,18 @@ class DeckEntryPointRouter : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleEntryPoint(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!isWaitingForOverlayPermissionResult) return
+
+        isWaitingForOverlayPermissionResult = false
+        if (Settings.canDrawOverlays(this)) {
+            launchOverlayOrShowPermissionScreen()
+        } else {
+            showOverlayPermissionScreen()
+        }
     }
 
     override fun onStop() {
@@ -50,17 +70,21 @@ class DeckEntryPointRouter : ComponentActivity() {
         when (DeckSurfacePolicy.effectForEntryPoint(currentSurface, intent.toSurfaceEntryPoint())) {
             DeckSurfaceEffect.ShowSettings -> showSettingScreen()
             DeckSurfaceEffect.ShowOverlay,
-            DeckSurfaceEffect.CloseSettingsThenShowOverlay -> launchOverlayOrPermissionSettings()
+            DeckSurfaceEffect.CloseSettingsThenShowOverlay -> launchOverlayOrShowPermissionScreen()
             DeckSurfaceEffect.CloseSettings -> closeRouterTask()
             DeckSurfaceEffect.KeepSettings -> Unit
         }
     }
 
     private fun showSettingScreen() {
+        isWaitingForOverlayPermissionResult = false
         currentSurface = DeckSurface.Settings
-        enableEdgeToEdge()
         setContent {
-            DeckphonephoneTheme {
+            val isDarkTheme by appContainer.useCases.observeDarkTheme().collectAsState()
+            LaunchedEffect(isDarkTheme) {
+                enableEdgeToEdgeForTheme(isDarkTheme)
+            }
+            DeckphonephoneTheme(darkTheme = isDarkTheme) {
                 val viewModel = viewModel<DeckSettingViewModel>(
                     factory = DeckSettingViewModel.Factory(appContainer.useCases),
                 )
@@ -76,7 +100,7 @@ class DeckEntryPointRouter : ComponentActivity() {
         when (DeckSurfacePolicy.effectForSettingsExit(DeckSettingsExit.BackPressed)) {
             DeckSurfaceEffect.ShowOverlay -> {
                 currentSurface = null
-                launchOverlayOrPermissionSettings()
+                launchOverlayOrShowPermissionScreen()
             }
 
             DeckSurfaceEffect.ShowSettings,
@@ -86,30 +110,64 @@ class DeckEntryPointRouter : ComponentActivity() {
         }
     }
 
-    private fun launchOverlayOrPermissionSettings() {
+    private fun launchOverlayOrShowPermissionScreen() {
         currentSurface = DeckSurface.Overlay
         if (Settings.canDrawOverlays(this)) {
             DeckOverlayService.start(this)
             currentSurface = null
             closeRouterTask()
         } else {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName"),
-            )
-            startActivity(intent)
-            currentSurface = null
-            closeRouter()
+            showOverlayPermissionScreen()
         }
+    }
+
+    private fun showOverlayPermissionScreen() {
+        currentSurface = null
+        setContent {
+            val isDarkTheme by appContainer.useCases.observeDarkTheme().collectAsState()
+            LaunchedEffect(isDarkTheme) {
+                enableEdgeToEdgeForTheme(isDarkTheme)
+            }
+            DeckphonephoneTheme(darkTheme = isDarkTheme) {
+                DeckOverlayPermissionScreen(
+                    onOpenPermissionSettings = ::openOverlayPermissionSettings,
+                    onClose = ::closeRouterTask,
+                )
+            }
+        }
+    }
+
+    private fun openOverlayPermissionSettings() {
+        val intent = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:$packageName"),
+        )
+        isWaitingForOverlayPermissionResult = true
+        runCatching {
+            startActivity(intent)
+        }.onFailure {
+            isWaitingForOverlayPermissionResult = false
+            Toast.makeText(this, "권한 설정 화면을 열지 못했습니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun enableEdgeToEdgeForTheme(isDarkTheme: Boolean) {
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                lightScrim = Color.TRANSPARENT,
+                darkScrim = Color.TRANSPARENT,
+                detectDarkMode = { isDarkTheme },
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = Color.TRANSPARENT,
+                darkScrim = Color.TRANSPARENT,
+                detectDarkMode = { isDarkTheme },
+            ),
+        )
     }
 
     private fun closeRouterTask() {
         finishAndRemoveTask()
-        disableTransitionAnimation()
-    }
-
-    private fun closeRouter() {
-        finish()
         disableTransitionAnimation()
     }
 

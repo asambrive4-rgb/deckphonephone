@@ -12,6 +12,9 @@ import com.example.deckphonephone.deck.application.DeleteCategoryUseCase
 import com.example.deckphonephone.deck.application.ExecuteCardUseCase
 import com.example.deckphonephone.deck.application.ObserveCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
+import com.example.deckphonephone.deck.application.ThemePreferenceRepository
+import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
+import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
 import com.example.deckphonephone.deck.application.OpenUrlPort
 import com.example.deckphonephone.deck.application.OpenUrlResult
 import com.example.deckphonephone.deck.application.SetCardEnabledUseCase
@@ -24,6 +27,8 @@ import com.example.deckphonephone.deck.domain.DeckCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
@@ -121,7 +126,20 @@ private class FakeDeckRepository(
     override suspend fun deleteCard(cardId: Long) = error("Not used")
 }
 
+
+private class FakeThemePreferenceRepository : ThemePreferenceRepository {
+    private val darkTheme = MutableStateFlow(false)
+
+    override val isDarkTheme: StateFlow<Boolean> = darkTheme
+
+    override suspend fun setDarkTheme(isDarkTheme: Boolean) {
+        darkTheme.value = isDarkTheme
+    }
+}
+
 private fun DeckRepository.toUseCases(): DeckUseCases {
+    val themePreferenceRepository = FakeThemePreferenceRepository()
+
     return DeckUseCases(
         createCategory = CreateCategoryUseCase(this),
         observeCategories = ObserveCategoriesUseCase(this),
@@ -138,6 +156,8 @@ private fun DeckRepository.toUseCases(): DeckUseCases {
             openUrlPort = AlwaysSuccessfulOpenUrlPort,
             copyTextPort = AlwaysSuccessfulCopyTextPort,
         ),
+        observeDarkTheme = ObserveDarkThemeUseCase(themePreferenceRepository),
+        setDarkTheme = SetDarkThemeUseCase(themePreferenceRepository),
     )
 }
 

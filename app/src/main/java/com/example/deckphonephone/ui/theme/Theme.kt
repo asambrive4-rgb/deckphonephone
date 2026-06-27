@@ -1,6 +1,5 @@
 package com.example.deckphonephone.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -13,6 +12,8 @@ private val DarkColorScheme = darkColorScheme(
     background = NightBackground,
     surface = NightSurface,
     error = SkyError,
+    outline = SkyBorder,
+    outlineVariant = SkyBorder,
     onPrimary = SkyTextPrimary,
     onSecondary = SkyTextPrimary,
     onTertiary = SkyTextPrimary,
@@ -28,6 +29,8 @@ private val LightColorScheme = lightColorScheme(
     surface = SkySurface,
     surfaceVariant = SkySurfaceSubtle,
     error = SkyError,
+    outline = SkyBorder,
+    outlineVariant = SkyBorder,
     onPrimary = SkyTextPrimary,
     onSecondary = SkyTextPrimary,
     onTertiary = SkyTextPrimary,
@@ -38,7 +41,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun DeckphonephoneTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {

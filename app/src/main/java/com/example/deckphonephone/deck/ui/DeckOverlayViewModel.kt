@@ -84,6 +84,7 @@ class DeckOverlayViewModel(
                 }
 
                 ExecuteCardResult.DisabledCard -> showMessage("비활성화된 카드입니다.")
+                ExecuteCardResult.CopyTextBlank -> showMessage("복사할 문구가 없습니다")
                 ExecuteCardResult.OpenUrlFailed -> showMessage("웹페이지를 열지 못했습니다.")
                 ExecuteCardResult.CopyTextFailed -> showMessage("문구를 복사하지 못했습니다.")
             }

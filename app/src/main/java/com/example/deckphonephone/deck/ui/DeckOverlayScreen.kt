@@ -1,6 +1,5 @@
 package com.example.deckphonephone.deck.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,8 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,12 +35,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
 import com.example.deckphonephone.deck.domain.DeckCategory
 
 @Composable
@@ -89,9 +84,7 @@ private fun DeckOverlayScreenContent(
     val selectedCategory = uiState.categories.firstOrNull { it.id == uiState.selectedCategoryId }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.18f)),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Surface(
@@ -122,11 +115,13 @@ private fun DeckOverlayScreenContent(
                         CategoryGrid(
                             categories = uiState.categories,
                             onCategorySelected = onCategorySelected,
+                            onEmptyClicked = onSettingsClicked,
                         )
                     } else {
                         ActionCardGrid(
                             cards = uiState.cards,
                             onCardClicked = onCardClicked,
+                            onEmptyClicked = onSettingsClicked,
                         )
                     }
                 }
@@ -154,7 +149,7 @@ private fun OverlayHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (canGoBack) {
-            IconButton(onClick = onBack, modifier = Modifier.size(40.dp)) {
+            IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
                 Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
             }
         }
@@ -166,10 +161,10 @@ private fun OverlayHeader(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        IconButton(onClick = onSettingsClicked, modifier = Modifier.size(40.dp)) {
+        IconButton(onClick = onSettingsClicked, modifier = Modifier.size(48.dp)) {
             Icon(imageVector = Icons.Filled.Settings, contentDescription = "설정")
         }
-        IconButton(onClick = onClose, modifier = Modifier.size(40.dp)) {
+        IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
             Icon(imageVector = Icons.Filled.Close, contentDescription = "닫기")
         }
     }
@@ -179,12 +174,8 @@ private fun OverlayHeader(
 private fun CategoryGrid(
     categories: List<DeckCategory>,
     onCategorySelected: (Long) -> Unit,
+    onEmptyClicked: () -> Unit,
 ) {
-    if (categories.isEmpty()) {
-        EmptyMessage(text = "카테고리가 없습니다")
-        return
-    }
-
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 132.dp),
         contentPadding = PaddingValues(bottom = 8.dp),
@@ -192,8 +183,16 @@ private fun CategoryGrid(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.heightIn(max = 474.dp),
     ) {
+        if (categories.isEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                DeckEmptyCard(
+                    text = "+ 카테고리 추가",
+                    onClick = onEmptyClicked,
+                )
+            }
+        }
         items(categories, key = { it.id }) { category ->
-            CategoryCard(
+            OverlayCategoryCard(
                 category = category,
                 onClick = { onCategorySelected(category.id) },
             )
@@ -205,12 +204,8 @@ private fun CategoryGrid(
 private fun ActionCardGrid(
     cards: List<ActionCard>,
     onCardClicked: (ActionCard) -> Unit,
+    onEmptyClicked: () -> Unit,
 ) {
-    if (cards.isEmpty()) {
-        EmptyMessage(text = "카드가 없습니다")
-        return
-    }
-
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 132.dp),
         contentPadding = PaddingValues(bottom = 8.dp),
@@ -218,8 +213,16 @@ private fun ActionCardGrid(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.heightIn(max = 474.dp),
     ) {
+        if (cards.isEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                DeckEmptyCard(
+                    text = "+ 카드 추가",
+                    onClick = onEmptyClicked,
+                )
+            }
+        }
         items(cards, key = { it.id }) { card ->
-            ActionCardView(
+            OverlayActionCard(
                 card = card,
                 onClick = onCardClicked,
             )
@@ -228,102 +231,46 @@ private fun ActionCardGrid(
 }
 
 @Composable
-private fun CategoryCard(
+private fun OverlayCategoryCard(
     category: DeckCategory,
     onClick: () -> Unit,
 ) {
-    ElevatedCard(
+    DeckCardSurface(
         onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
         modifier = Modifier.height(92.dp),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = category.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = "카테고리",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActionCardView(
-    card: ActionCard,
-    onClick: (ActionCard) -> Unit,
-) {
-    ElevatedCard(
-        onClick = { onClick(card) },
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        modifier = Modifier
-            .height(102.dp)
-            .alpha(if (card.isEnabled) 1f else 0.55f),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = card.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = card.action.label(),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-
-@Composable
-private fun EmptyMessage(text: String) {
-    StatusMessage(text = text)
-}
-
-@Composable
-private fun StatusMessage(text: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(160.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        DeckCardTextContent(
+            title = category.name,
+            label = "카테고리",
+            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
 
-private fun CardAction.label(): String {
-    return when (this) {
-        is CardAction.CopyText -> "문구"
-        is CardAction.OpenUrl -> "웹사이트"
+@Composable
+private fun OverlayActionCard(
+    card: ActionCard,
+    onClick: (ActionCard) -> Unit,
+) {
+    val actionLabel = if (card.isEnabled) {
+        card.action.deckLabel()
+    } else {
+        "비활성 · ${card.action.deckLabel()}"
+    }
+
+    DeckCardSurface(
+        onClick = { onClick(card) },
+        modifier = Modifier.height(102.dp),
+        enabled = card.isEnabled,
+    ) {
+        DeckCardTextContent(
+            title = card.title,
+            label = actionLabel,
+            labelColor = if (card.isEnabled) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
     }
 }

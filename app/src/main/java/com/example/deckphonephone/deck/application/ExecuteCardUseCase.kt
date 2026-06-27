@@ -31,7 +31,7 @@ class ExecuteCardUseCase(
 
     private suspend fun copyText(text: String): ExecuteCardResult {
         if (text.isBlank()) {
-            return ExecuteCardResult.CopyTextFailed
+            return ExecuteCardResult.CopyTextBlank
         }
 
         return when (copyTextPort.copyText(text)) {

@@ -38,10 +38,47 @@ class DeckSettingViewModel(
                 }
             }
         }
+        viewModelScope.launch(dispatcher) {
+            useCases.observeDarkTheme().collect { isDarkTheme ->
+                _uiState.update { state ->
+                    state.copy(isDarkTheme = isDarkTheme)
+                }
+            }
+        }
     }
 
     fun onCategoryNameChanged(value: String) {
         _uiState.update { it.copy(categoryNameInput = value) }
+    }
+
+    fun requestCreateCategory() {
+        _uiState.update { it.copy(isCreatingCategory = true, message = null) }
+    }
+
+    fun dismissCreateCategory() {
+        _uiState.update { it.copy(isCreatingCategory = false) }
+    }
+
+    fun requestCreateCard() {
+        _uiState.update { it.copy(isCreatingCard = true, message = null) }
+    }
+
+    fun dismissCreateCard() {
+        _uiState.update { it.copy(isCreatingCard = false) }
+    }
+
+    fun requestAppSettings() {
+        _uiState.update { it.copy(isAppSettingsOpen = true, message = null) }
+    }
+
+    fun dismissAppSettings() {
+        _uiState.update { it.copy(isAppSettingsOpen = false) }
+    }
+
+    fun setDarkTheme(isDarkTheme: Boolean) {
+        viewModelScope.launch(dispatcher) {
+            useCases.setDarkTheme(isDarkTheme)
+        }
     }
 
     fun createCategory() {
@@ -52,6 +89,7 @@ class DeckSettingViewModel(
                     _uiState.update {
                         it.copy(
                             categoryNameInput = "",
+                            isCreatingCategory = false,
                             message = "카테고리를 저장했습니다.",
                         )
                     }
@@ -127,6 +165,7 @@ class DeckSettingViewModel(
                 isCardsLoading = true,
                 cardTitleInput = "",
                 cardPayloadInput = "",
+                isCreatingCard = false,
             )
         }
 
@@ -154,6 +193,7 @@ class DeckSettingViewModel(
                 isCardsLoading = false,
                 cardTitleInput = "",
                 cardPayloadInput = "",
+                isCreatingCard = false,
             )
         }
     }
@@ -204,6 +244,7 @@ class DeckSettingViewModel(
                         it.copy(
                             cardTitleInput = "",
                             cardPayloadInput = "",
+                            isCreatingCard = false,
                             message = "카드를 저장했습니다.",
                         )
                     }
@@ -371,6 +412,7 @@ class DeckSettingViewModel(
                 ExecuteCardResult.OpenedUrl -> Unit
                 ExecuteCardResult.CopiedText -> showMessage("복사했습니다")
                 ExecuteCardResult.DisabledCard -> showMessage("비활성화된 카드입니다.")
+                ExecuteCardResult.CopyTextBlank -> showMessage("복사할 문구가 없습니다")
                 ExecuteCardResult.OpenUrlFailed -> showMessage("웹페이지를 열지 못했습니다.")
                 ExecuteCardResult.CopyTextFailed -> showMessage("문구를 복사하지 못했습니다.")
             }

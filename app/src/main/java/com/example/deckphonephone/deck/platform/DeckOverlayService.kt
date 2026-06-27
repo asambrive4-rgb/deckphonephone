@@ -15,6 +15,8 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.setViewTreeLifecycleOwner
@@ -98,7 +100,8 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
             setViewTreeLifecycleOwner(this@DeckOverlayService)
             setViewTreeSavedStateRegistryOwner(this@DeckOverlayService)
             setContent {
-                DeckphonephoneTheme {
+                val isDarkTheme by appContainer.useCases.observeDarkTheme().collectAsState()
+                DeckphonephoneTheme(darkTheme = isDarkTheme) {
                     DeckOverlayScreen(
                         viewModel = viewModel,
                         onSettingsClicked = ::openSettings,
@@ -124,9 +127,30 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
             gravity = Gravity.TOP or Gravity.START
         }
 
-        windowManager.addView(rootView, params)
+        if (!addOverlayView(rootView, params)) return
+
         overlayView = rootView
         rootView.post { rootView.requestFocus() }
+    }
+
+    private fun addOverlayView(
+        rootView: View,
+        params: WindowManager.LayoutParams,
+    ): Boolean {
+        val result = runCatching {
+            windowManager.addView(rootView, params)
+        }
+        if (result.isSuccess) return true
+
+        isFinishingOverlay = true
+        overlayViewModel?.clear()
+        overlayViewModel = null
+        runCatching {
+            windowManager.removeView(rootView)
+        }
+        showToast("오버레이를 표시하지 못했습니다.")
+        stopSelf()
+        return false
     }
 
     private fun openSettings() {
