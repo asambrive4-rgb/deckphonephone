@@ -17,13 +17,16 @@ import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUse
 import com.example.deckphonephone.deck.application.ObserveCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
+import com.example.deckphonephone.deck.application.ObserveOverlayHandPreferenceUseCase
 import com.example.deckphonephone.deck.application.OpenUrlPort
+import com.example.deckphonephone.deck.application.OverlayHandPreference
 import com.example.deckphonephone.deck.application.OpenUrlResult
 import com.example.deckphonephone.deck.application.PairedBluetoothDevicesPort
 import com.example.deckphonephone.deck.application.PairedBluetoothDevicesResult
 import com.example.deckphonephone.deck.application.SetCardEnabledUseCase
 import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
-import com.example.deckphonephone.deck.application.ThemePreferenceRepository
+import com.example.deckphonephone.deck.application.SetOverlayHandPreferenceUseCase
+import com.example.deckphonephone.deck.application.AppPreferenceRepository
 import com.example.deckphonephone.deck.application.UpdateBluetoothDeviceCardUseCase
 import com.example.deckphonephone.deck.application.UpdateCategoryUseCase
 import com.example.deckphonephone.deck.application.UpdateTextCardUseCase
@@ -133,18 +136,24 @@ private class FakeDeckRepository(
     override suspend fun deleteCard(cardId: Long) = error("Not used")
 }
 
-private class FakeThemePreferenceRepository : ThemePreferenceRepository {
+private class FakeAppPreferenceRepository : AppPreferenceRepository {
     private val darkTheme = MutableStateFlow(false)
+    private val handPreference = MutableStateFlow(OverlayHandPreference.Right)
 
     override val isDarkTheme: StateFlow<Boolean> = darkTheme
+    override val overlayHandPreference: StateFlow<OverlayHandPreference> = handPreference
 
     override suspend fun setDarkTheme(isDarkTheme: Boolean) {
         darkTheme.value = isDarkTheme
     }
+
+    override suspend fun setOverlayHandPreference(overlayHandPreference: OverlayHandPreference) {
+        handPreference.value = overlayHandPreference
+    }
 }
 
 private fun DeckRepository.toUseCases(): DeckUseCases {
-    val themePreferenceRepository = FakeThemePreferenceRepository()
+    val appPreferenceRepository = FakeAppPreferenceRepository()
 
     return DeckUseCases(
         createCategory = CreateCategoryUseCase(this),
@@ -166,8 +175,10 @@ private fun DeckRepository.toUseCases(): DeckUseCases {
             copyTextPort = AlwaysSuccessfulCopyTextPort,
             bluetoothDeviceActionPort = AlwaysSuccessfulBluetoothDeviceActionPort,
         ),
-        observeDarkTheme = ObserveDarkThemeUseCase(themePreferenceRepository),
-        setDarkTheme = SetDarkThemeUseCase(themePreferenceRepository),
+        observeDarkTheme = ObserveDarkThemeUseCase(appPreferenceRepository),
+        setDarkTheme = SetDarkThemeUseCase(appPreferenceRepository),
+        observeOverlayHandPreference = ObserveOverlayHandPreferenceUseCase(appPreferenceRepository),
+        setOverlayHandPreference = SetOverlayHandPreferenceUseCase(appPreferenceRepository),
     )
 }
 

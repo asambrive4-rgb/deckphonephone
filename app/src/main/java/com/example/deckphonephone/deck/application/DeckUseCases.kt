@@ -18,4 +18,6 @@ data class DeckUseCases(
     val executeCard: ExecuteCardUseCase,
     val observeDarkTheme: ObserveDarkThemeUseCase,
     val setDarkTheme: SetDarkThemeUseCase,
+    val observeOverlayHandPreference: ObserveOverlayHandPreferenceUseCase,
+    val setOverlayHandPreference: SetOverlayHandPreferenceUseCase,
 )

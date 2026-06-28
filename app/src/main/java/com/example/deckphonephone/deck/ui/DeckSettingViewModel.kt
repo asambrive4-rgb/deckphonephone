@@ -7,6 +7,7 @@ import com.example.deckphonephone.deck.application.DeckError
 import com.example.deckphonephone.deck.application.DeckResult
 import com.example.deckphonephone.deck.application.DeckUseCases
 import com.example.deckphonephone.deck.application.ExecuteCardResult
+import com.example.deckphonephone.deck.application.OverlayHandPreference
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.application.PairedBluetoothDevicesResult
 import com.example.deckphonephone.deck.domain.ActionCard
@@ -47,6 +48,13 @@ class DeckSettingViewModel(
                 }
             }
         }
+        viewModelScope.launch(dispatcher) {
+            useCases.observeOverlayHandPreference().collect { overlayHandPreference ->
+                _uiState.update { state ->
+                    state.copy(overlayHandPreference = overlayHandPreference)
+                }
+            }
+        }
     }
 
     fun onCategoryNameChanged(value: String) {
@@ -80,6 +88,17 @@ class DeckSettingViewModel(
     fun setDarkTheme(isDarkTheme: Boolean) {
         viewModelScope.launch(dispatcher) {
             useCases.setDarkTheme(isDarkTheme)
+        }
+    }
+
+    fun setOverlayRightHanded(isRightHanded: Boolean) {
+        viewModelScope.launch(dispatcher) {
+            val overlayHandPreference = if (isRightHanded) {
+                OverlayHandPreference.Right
+            } else {
+                OverlayHandPreference.Left
+            }
+            useCases.setOverlayHandPreference(overlayHandPreference)
         }
     }
 

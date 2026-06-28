@@ -23,7 +23,9 @@ import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 @Composable
 internal fun AppSettingsDialog(
     isDarkTheme: Boolean,
+    isRightHanded: Boolean,
     onDarkThemeChanged: (Boolean) -> Unit,
+    onRightHandedChanged: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
@@ -33,29 +35,21 @@ internal fun AppSettingsDialog(
         textContentColor = MaterialTheme.colorScheme.onSurface,
         title = { Text("앱 설정") },
         text = {
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        text = "화면 모드",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = if (isDarkTheme) "다크 모드" else "라이트 모드",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Switch(
+                AppSettingsSwitchRow(
+                    title = "화면 모드",
+                    description = if (isDarkTheme) "다크 모드" else "라이트 모드",
                     checked = isDarkTheme,
                     onCheckedChange = onDarkThemeChanged,
+                )
+                AppSettingsSwitchRow(
+                    title = "어느 손?",
+                    description = if (isRightHanded) "오른손 잡이용" else "왼손잡이용",
+                    checked = isRightHanded,
+                    onCheckedChange = onRightHandedChanged,
                 )
             }
         },
@@ -65,6 +59,40 @@ internal fun AppSettingsDialog(
             }
         },
     )
+}
+
+@Composable
+private fun AppSettingsSwitchRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+        )
+    }
 }
 
 @Composable

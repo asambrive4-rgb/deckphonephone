@@ -3,9 +3,9 @@ package com.example.deckphonephone.deck.application
 import kotlinx.coroutines.flow.StateFlow
 
 class ObserveDarkThemeUseCase(
-    private val themePreferenceRepository: ThemePreferenceRepository,
+    private val appPreferenceRepository: AppPreferenceRepository,
 ) {
     operator fun invoke(): StateFlow<Boolean> {
-        return themePreferenceRepository.isDarkTheme
+        return appPreferenceRepository.isDarkTheme
     }
 }

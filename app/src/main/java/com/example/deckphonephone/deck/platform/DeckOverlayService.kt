@@ -28,6 +28,7 @@ import com.example.deckphonephone.DeckAppContainer
 import com.example.deckphonephone.DeckEntryPointRouter
 import com.example.deckphonephone.deck.application.DeckSurface
 import com.example.deckphonephone.deck.application.DeckSurfacePolicy
+import com.example.deckphonephone.deck.application.OverlayHandPreference
 import com.example.deckphonephone.deck.ui.DeckOverlayScreen
 import com.example.deckphonephone.deck.ui.DeckOverlayViewModel
 import com.example.deckphonephone.ui.theme.DeckphonephoneTheme
@@ -118,15 +119,17 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
             ),
         )
 
+        val overlayHandPreference = appContainer.useCases.observeOverlayHandPreference().value
         val params = WindowManager.LayoutParams(
-            overlayPanelWidthPx(),
+            overlayPanelWidthPx(overlayHandPreference),
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT,
         ).apply {
-            gravity = Gravity.CENTER
+            gravity = overlayPanelGravity(overlayHandPreference)
+            x = overlayHorizontalMarginPx()
         }
 
         if (!addOverlayView(rootView, params)) return
@@ -135,15 +138,33 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
         rootView.post { rootView.requestFocus() }
     }
 
-    private fun overlayPanelWidthPx(): Int {
-        val density = resources.displayMetrics.density
+    private fun overlayPanelWidthPx(overlayHandPreference: OverlayHandPreference): Int {
+        val fullWidth = fullOverlayPanelWidthPx()
+        return when (overlayHandPreference) {
+            OverlayHandPreference.Left,
+            OverlayHandPreference.Right -> (fullWidth * OverlayHandedWidthNumerator / OverlayHandedWidthDenominator)
+                .coerceAtLeast(1)
+        }
+    }
+
+    private fun fullOverlayPanelWidthPx(): Int {
         val screenWidth = resources.displayMetrics.widthPixels
-        val horizontalMargin = (OverlayHorizontalMarginDp * density).roundToInt()
-        val maxPanelWidth = (OverlayMaxWidthDp * density).roundToInt()
+        val horizontalMargin = overlayHorizontalMarginPx()
+        val maxPanelWidth = (OverlayMaxWidthDp * resources.displayMetrics.density).roundToInt()
         val availableWidth = (screenWidth - horizontalMargin * 2).coerceAtLeast(1)
         return availableWidth.coerceAtMost(maxPanelWidth)
     }
 
+    private fun overlayHorizontalMarginPx(): Int {
+        return (OverlayHorizontalMarginDp * resources.displayMetrics.density).roundToInt()
+    }
+
+    private fun overlayPanelGravity(overlayHandPreference: OverlayHandPreference): Int {
+        return Gravity.CENTER_VERTICAL or when (overlayHandPreference) {
+            OverlayHandPreference.Left -> Gravity.LEFT
+            OverlayHandPreference.Right -> Gravity.RIGHT
+        }
+    }
     private fun addOverlayView(
         rootView: View,
         params: WindowManager.LayoutParams,
@@ -238,6 +259,8 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
     companion object {
         private const val OverlayHorizontalMarginDp = 18
         private const val OverlayMaxWidthDp = 560
+        private const val OverlayHandedWidthNumerator = 2
+        private const val OverlayHandedWidthDenominator = 3
 
         fun start(context: Context) {
             context.startService(Intent(context, DeckOverlayService::class.java))

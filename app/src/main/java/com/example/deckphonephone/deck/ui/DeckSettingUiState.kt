@@ -1,5 +1,6 @@
 package com.example.deckphonephone.deck.ui
 
+import com.example.deckphonephone.deck.application.OverlayHandPreference
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.DeckCategory
@@ -20,6 +21,7 @@ data class DeckSettingUiState(
     val isBluetoothDevicesLoading: Boolean = false,
     val isCreatingCard: Boolean = false,
     val isDarkTheme: Boolean = false,
+    val overlayHandPreference: OverlayHandPreference = OverlayHandPreference.Right,
     val isAppSettingsOpen: Boolean = false,
     val editingCategory: CategoryEditState? = null,
     val editingCard: CardEditState? = null,

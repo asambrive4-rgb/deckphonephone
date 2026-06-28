@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.deckphonephone.deck.domain.CardAction
 
@@ -75,26 +76,29 @@ internal fun DeckCardTextContent(
     label: String,
     modifier: Modifier = Modifier,
     labelColor: androidx.compose.ui.graphics.Color? = null,
+    titleMaxLines: Int = 2,
+    labelMaxLines: Int = 1,
+    contentPadding: Dp = 14.dp,
 ) {
     val resolvedLabelColor = labelColor ?: MaterialTheme.colorScheme.primary
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(14.dp),
+            .padding(contentPadding),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
+            maxLines = titleMaxLines,
             overflow = TextOverflow.Ellipsis,
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             color = resolvedLabelColor,
-            maxLines = 1,
+            maxLines = labelMaxLines,
             overflow = TextOverflow.Ellipsis,
         )
     }

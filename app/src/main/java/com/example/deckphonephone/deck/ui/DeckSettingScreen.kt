@@ -49,6 +49,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.example.deckphonephone.deck.application.OverlayHandPreference
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.DeckCategory
@@ -136,6 +137,7 @@ fun DeckSettingScreen(
         onOpenAppSettings = viewModel::requestAppSettings,
         onDismissAppSettings = viewModel::dismissAppSettings,
         onDarkThemeChanged = viewModel::setDarkTheme,
+        onOverlayRightHandedChanged = viewModel::setOverlayRightHanded,
         onCreateCard = viewModel::createCard,
         onCardClicked = viewModel::executeCard,
         onEditCard = viewModel::requestEditCard,
@@ -179,6 +181,7 @@ private fun DeckSettingScreenContent(
     onOpenAppSettings: () -> Unit,
     onDismissAppSettings: () -> Unit,
     onDarkThemeChanged: (Boolean) -> Unit,
+    onOverlayRightHandedChanged: (Boolean) -> Unit,
     onCreateCard: () -> Unit,
     onCardClicked: (ActionCard) -> Unit,
     onEditCard: (ActionCard) -> Unit,
@@ -272,7 +275,9 @@ private fun DeckSettingScreenContent(
     if (uiState.isAppSettingsOpen) {
         AppSettingsDialog(
             isDarkTheme = uiState.isDarkTheme,
+            isRightHanded = uiState.overlayHandPreference == OverlayHandPreference.Right,
             onDarkThemeChanged = onDarkThemeChanged,
+            onRightHandedChanged = onOverlayRightHandedChanged,
             onDismiss = onDismissAppSettings,
         )
     }

@@ -175,7 +175,7 @@ private fun CategoryGrid(
     onEmptyClicked: () -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 132.dp),
+        columns = GridCells.Adaptive(minSize = 88.dp),
         contentPadding = PaddingValues(bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -205,7 +205,7 @@ private fun ActionCardGrid(
     onEmptyClicked: () -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 132.dp),
+        columns = GridCells.Adaptive(minSize = 88.dp),
         contentPadding = PaddingValues(bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -235,12 +235,14 @@ private fun OverlayCategoryCard(
 ) {
     DeckCardSurface(
         onClick = onClick,
-        modifier = Modifier.height(92.dp),
+        modifier = Modifier.height(88.dp),
     ) {
         DeckCardTextContent(
             title = category.name,
             label = "카테고리",
             labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            labelMaxLines = 2,
+            contentPadding = 10.dp,
         )
     }
 }
@@ -258,7 +260,7 @@ private fun OverlayActionCard(
 
     DeckCardSurface(
         onClick = { onClick(card) },
-        modifier = Modifier.height(102.dp),
+        modifier = Modifier.height(96.dp),
         enabled = card.isEnabled,
     ) {
         DeckCardTextContent(
@@ -269,6 +271,8 @@ private fun OverlayActionCard(
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
             },
+            labelMaxLines = 2,
+            contentPadding = 10.dp,
         )
     }
 }

@@ -13,15 +13,17 @@ import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUse
 import com.example.deckphonephone.deck.application.ObserveCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
+import com.example.deckphonephone.deck.application.ObserveOverlayHandPreferenceUseCase
 import com.example.deckphonephone.deck.application.SetCardEnabledUseCase
 import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
+import com.example.deckphonephone.deck.application.SetOverlayHandPreferenceUseCase
 import com.example.deckphonephone.deck.application.UpdateBluetoothDeviceCardUseCase
 import com.example.deckphonephone.deck.application.UpdateCategoryUseCase
 import com.example.deckphonephone.deck.application.UpdateTextCardUseCase
 import com.example.deckphonephone.deck.application.UpdateWebCardUseCase
 import com.example.deckphonephone.deck.data.local.DeckDatabase
 import com.example.deckphonephone.deck.data.local.RoomDeckRepository
-import com.example.deckphonephone.deck.data.local.SharedPreferencesThemePreferenceRepository
+import com.example.deckphonephone.deck.data.local.SharedPreferencesAppPreferenceRepository
 import com.example.deckphonephone.deck.platform.AndroidBluetoothDeviceActionAdapter
 import com.example.deckphonephone.deck.platform.AndroidClipboardCopyTextAdapter
 import com.example.deckphonephone.deck.platform.AndroidOpenUrlAdapter
@@ -31,7 +33,7 @@ class DeckAppContainer(context: Context) {
     private val appContext = context.applicationContext
     private val database = DeckDatabase.get(appContext)
     private val repository = RoomDeckRepository(database.deckDao())
-    private val themePreferenceRepository = SharedPreferencesThemePreferenceRepository(appContext)
+    private val appPreferenceRepository = SharedPreferencesAppPreferenceRepository(appContext)
     private val openUrlAdapter = AndroidOpenUrlAdapter(appContext)
     private val copyTextAdapter = AndroidClipboardCopyTextAdapter(appContext)
     private val pairedBluetoothDevicesAdapter = AndroidPairedBluetoothDevicesAdapter(appContext)
@@ -57,7 +59,9 @@ class DeckAppContainer(context: Context) {
             copyTextPort = copyTextAdapter,
             bluetoothDeviceActionPort = bluetoothDeviceActionAdapter,
         ),
-        observeDarkTheme = ObserveDarkThemeUseCase(themePreferenceRepository),
-        setDarkTheme = SetDarkThemeUseCase(themePreferenceRepository),
+        observeDarkTheme = ObserveDarkThemeUseCase(appPreferenceRepository),
+        setDarkTheme = SetDarkThemeUseCase(appPreferenceRepository),
+        observeOverlayHandPreference = ObserveOverlayHandPreferenceUseCase(appPreferenceRepository),
+        setOverlayHandPreference = SetOverlayHandPreferenceUseCase(appPreferenceRepository),
     )
 }
