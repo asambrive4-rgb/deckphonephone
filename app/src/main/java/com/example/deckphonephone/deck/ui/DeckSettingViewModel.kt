@@ -53,6 +53,13 @@ class DeckSettingViewModel(
                 }
             }
         }
+        viewModelScope.launch(dispatcher) {
+            useCases.observeConnectedBluetoothDevices().collect { devices ->
+                _uiState.update { state ->
+                    state.copy(connectedBluetoothDevices = devices)
+                }
+            }
+        }
     }
 
     fun onCategoryNameChanged(value: String) {

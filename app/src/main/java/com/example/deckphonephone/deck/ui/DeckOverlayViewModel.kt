@@ -36,6 +36,13 @@ class DeckOverlayViewModel(
                 }
             }
         }
+        scope.launch {
+            useCases.observeConnectedBluetoothDevices().collect { devices ->
+                _uiState.update { state ->
+                    state.copy(connectedBluetoothDevices = devices)
+                }
+            }
+        }
     }
 
     fun selectCategory(categoryId: Long) {

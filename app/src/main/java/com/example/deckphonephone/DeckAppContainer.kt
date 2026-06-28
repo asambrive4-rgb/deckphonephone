@@ -10,6 +10,7 @@ import com.example.deckphonephone.deck.application.DeleteCardUseCase
 import com.example.deckphonephone.deck.application.DeleteCategoryUseCase
 import com.example.deckphonephone.deck.application.ExecuteCardUseCase
 import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUseCase
+import com.example.deckphonephone.deck.application.ObserveConnectedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
@@ -26,6 +27,7 @@ import com.example.deckphonephone.deck.data.local.RoomDeckRepository
 import com.example.deckphonephone.deck.data.local.SharedPreferencesAppPreferenceRepository
 import com.example.deckphonephone.deck.platform.AndroidBluetoothDeviceActionAdapter
 import com.example.deckphonephone.deck.platform.AndroidClipboardCopyTextAdapter
+import com.example.deckphonephone.deck.platform.AndroidConnectedBluetoothDevicesAdapter
 import com.example.deckphonephone.deck.platform.AndroidOpenUrlAdapter
 import com.example.deckphonephone.deck.platform.AndroidPairedBluetoothDevicesAdapter
 
@@ -37,6 +39,7 @@ class DeckAppContainer(context: Context) {
     private val openUrlAdapter = AndroidOpenUrlAdapter(appContext)
     private val copyTextAdapter = AndroidClipboardCopyTextAdapter(appContext)
     private val pairedBluetoothDevicesAdapter = AndroidPairedBluetoothDevicesAdapter(appContext)
+    private val connectedBluetoothDevicesAdapter = AndroidConnectedBluetoothDevicesAdapter(appContext)
     private val bluetoothDeviceActionAdapter = AndroidBluetoothDeviceActionAdapter(appContext)
 
     val useCases = DeckUseCases(
@@ -48,6 +51,9 @@ class DeckAppContainer(context: Context) {
         createWebCard = CreateWebCardUseCase(repository),
         createBluetoothDeviceCard = CreateBluetoothDeviceCardUseCase(repository),
         listPairedBluetoothDevices = ListPairedBluetoothDevicesUseCase(pairedBluetoothDevicesAdapter),
+        observeConnectedBluetoothDevices = ObserveConnectedBluetoothDevicesUseCase(
+            connectedBluetoothDevicesAdapter,
+        ),
         observeCards = ObserveCardsUseCase(repository),
         updateTextCard = UpdateTextCardUseCase(repository),
         updateWebCard = UpdateWebCardUseCase(repository),

@@ -2,6 +2,8 @@ package com.example.deckphonephone.deck.ui
 
 import com.example.deckphonephone.deck.application.BluetoothDeviceActionPort
 import com.example.deckphonephone.deck.application.BluetoothDeviceActionResult
+import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
+import com.example.deckphonephone.deck.application.ConnectedBluetoothDevicesPort
 import com.example.deckphonephone.deck.application.CopyTextPort
 import com.example.deckphonephone.deck.application.CopyTextResult
 import com.example.deckphonephone.deck.application.CreateBluetoothDeviceCardUseCase
@@ -16,6 +18,7 @@ import com.example.deckphonephone.deck.application.ExecuteCardUseCase
 import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
+import com.example.deckphonephone.deck.application.ObserveConnectedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
 import com.example.deckphonephone.deck.application.ObserveOverlayHandPreferenceUseCase
 import com.example.deckphonephone.deck.application.OpenUrlPort
@@ -39,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -219,6 +223,37 @@ class DeckSettingViewModelTest {
 
         assertEquals(OverlayHandPreference.Right, viewModel.uiState.value.overlayHandPreference)
     }
+
+    @Test
+    fun `connected bluetooth devices are exposed in setting state`() {
+        val firstDevice = ConnectedBluetoothDevice(
+            name = "Buds",
+            address = "AC:80:0A:20:CB:AF",
+        )
+        val secondDevice = ConnectedBluetoothDevice(
+            name = "Buds Right",
+            address = "11:22:33:44:55:66",
+        )
+        val connectedDevices = MutableStateFlow(listOf(firstDevice))
+        val viewModel = DeckSettingViewModel(
+            useCases = FakeSettingDeckRepository().toUseCases(
+                connectedDevicesFlow = connectedDevices,
+            ),
+            dispatcher = Dispatchers.Unconfined,
+        )
+
+        assertEquals(
+            listOf(firstDevice),
+            viewModel.uiState.value.connectedBluetoothDevices,
+        )
+
+        connectedDevices.value = listOf(secondDevice)
+
+        assertEquals(
+            listOf(secondDevice),
+            viewModel.uiState.value.connectedBluetoothDevices,
+        )
+    }
 }
 
 private class FakeSettingDeckRepository : DeckRepository {
@@ -299,6 +334,7 @@ private class FakeSettingAppPreferenceRepository : AppPreferenceRepository {
 
 private fun DeckRepository.toUseCases(
     appPreferenceRepository: AppPreferenceRepository = FakeSettingAppPreferenceRepository(),
+    connectedDevicesFlow: Flow<List<ConnectedBluetoothDevice>> = flowOf(emptyList()),
 ): DeckUseCases {
     return DeckUseCases(
         createCategory = CreateCategoryUseCase(this),
@@ -309,6 +345,9 @@ private fun DeckRepository.toUseCases(
         createWebCard = CreateWebCardUseCase(this),
         createBluetoothDeviceCard = CreateBluetoothDeviceCardUseCase(this),
         listPairedBluetoothDevices = ListPairedBluetoothDevicesUseCase(EmptySettingPairedBluetoothDevicesPort),
+        observeConnectedBluetoothDevices = ObserveConnectedBluetoothDevicesUseCase(
+            FakeSettingConnectedBluetoothDevicesPort(connectedDevicesFlow),
+        ),
         observeCards = ObserveCardsUseCase(this),
         updateTextCard = UpdateTextCardUseCase(this),
         updateWebCard = UpdateWebCardUseCase(this),
@@ -325,6 +364,14 @@ private fun DeckRepository.toUseCases(
         observeOverlayHandPreference = ObserveOverlayHandPreferenceUseCase(appPreferenceRepository),
         setOverlayHandPreference = SetOverlayHandPreferenceUseCase(appPreferenceRepository),
     )
+}
+
+private class FakeSettingConnectedBluetoothDevicesPort(
+    private val connectedDevicesFlow: Flow<List<ConnectedBluetoothDevice>>,
+) : ConnectedBluetoothDevicesPort {
+    override fun observeConnectedBluetoothDevices(): Flow<List<ConnectedBluetoothDevice>> {
+        return connectedDevicesFlow
+    }
 }
 
 private object EmptySettingPairedBluetoothDevicesPort : PairedBluetoothDevicesPort {

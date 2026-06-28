@@ -20,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.DeckCategory
 
@@ -77,6 +78,7 @@ internal fun CategoryCard(
 @Composable
 internal fun ActionCardView(
     card: ActionCard,
+    connectedBluetoothDevices: List<ConnectedBluetoothDevice>,
     onClick: (ActionCard) -> Unit,
     onEdit: () -> Unit,
     onToggleEnabled: () -> Unit,
@@ -88,16 +90,19 @@ internal fun ActionCardView(
     } else {
         "비활성 · ${card.action.deckLabel()}"
     }
+    val isConnectedBluetoothCard = card.hasConnectedBluetoothDevice(connectedBluetoothDevices)
 
     DeckCardSurface(
         onClick = { onClick(card) },
         modifier = Modifier.height(92.dp),
         enabled = card.isEnabled,
+        breathingGlow = isConnectedBluetoothCard,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             DeckCardTextContent(
                 title = card.title,
                 label = actionLabel,
+                badgeText = if (isConnectedBluetoothCard) "연결됨" else null,
                 labelColor = if (card.isEnabled) {
                     MaterialTheme.colorScheme.primary
                 } else {

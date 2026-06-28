@@ -2,6 +2,8 @@ package com.example.deckphonephone.deck.ui
 
 import com.example.deckphonephone.deck.application.BluetoothDeviceActionPort
 import com.example.deckphonephone.deck.application.BluetoothDeviceActionResult
+import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
+import com.example.deckphonephone.deck.application.ConnectedBluetoothDevicesPort
 import com.example.deckphonephone.deck.application.CopyTextPort
 import com.example.deckphonephone.deck.application.CopyTextResult
 import com.example.deckphonephone.deck.application.CreateBluetoothDeviceCardUseCase
@@ -16,6 +18,7 @@ import com.example.deckphonephone.deck.application.ExecuteCardUseCase
 import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
+import com.example.deckphonephone.deck.application.ObserveConnectedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
 import com.example.deckphonephone.deck.application.ObserveOverlayHandPreferenceUseCase
 import com.example.deckphonephone.deck.application.OpenUrlPort
@@ -159,6 +162,79 @@ class DeckOverlayViewModelTest {
 
         viewModel.clear()
     }
+
+    @Test
+    fun `connected bluetooth devices are exposed in overlay state`() {
+        val firstDevice = ConnectedBluetoothDevice(
+            name = "Buds",
+            address = "AC:80:0A:20:CB:AF",
+        )
+        val secondDevice = ConnectedBluetoothDevice(
+            name = "Buds Right",
+            address = "11:22:33:44:55:66",
+        )
+        val connectedDevices = MutableStateFlow(listOf(firstDevice))
+        val viewModel = DeckOverlayViewModel(
+            useCases = FakeDeckRepository(
+                cardsFlow = flowOf(emptyList()),
+            ).toUseCases(connectedDevices),
+            onFinished = {},
+            onTransientMessage = {},
+            dispatcher = Dispatchers.Unconfined,
+        )
+
+        assertEquals(
+            listOf(firstDevice),
+            viewModel.uiState.value.connectedBluetoothDevices,
+        )
+
+        connectedDevices.value = listOf(secondDevice)
+
+        assertEquals(
+            listOf(secondDevice),
+            viewModel.uiState.value.connectedBluetoothDevices,
+        )
+
+        viewModel.clear()
+    }
+
+    @Test
+    fun `bluetooth card is connected when device address matches`() {
+        assertTrue(
+            bluetoothCard().hasConnectedBluetoothDevice(
+                listOf(
+                    ConnectedBluetoothDevice(
+                        name = "Other name",
+                        address = "AC:80:0A:20:CB:AF",
+                    ),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `bluetooth card is connected when buds unit address differs but name matches`() {
+        val card = ActionCard(
+            id = 23L,
+            categoryId = 1L,
+            title = "Buds3 Pro",
+            action = CardAction.BluetoothDevice(
+                deviceName = "주상의 Buds3 Pro",
+                deviceAddress = "AC:80:0A:20:CB:AF",
+            ),
+        )
+
+        assertTrue(
+            card.hasConnectedBluetoothDevice(
+                listOf(
+                    ConnectedBluetoothDevice(
+                        name = "LE-주상의 Buds3 Pro (R)",
+                        address = "11:22:33:44:55:66",
+                    ),
+                ),
+            ),
+        )
+    }
 }
 
 private fun webCard() = ActionCard(
@@ -242,7 +318,9 @@ private class FakeAppPreferenceRepository : AppPreferenceRepository {
     }
 }
 
-private fun DeckRepository.toUseCases(): DeckUseCases {
+private fun DeckRepository.toUseCases(
+    connectedDevicesFlow: Flow<List<ConnectedBluetoothDevice>> = flowOf(emptyList()),
+): DeckUseCases {
     val appPreferenceRepository = FakeAppPreferenceRepository()
 
     return DeckUseCases(
@@ -254,6 +332,9 @@ private fun DeckRepository.toUseCases(): DeckUseCases {
         createWebCard = CreateWebCardUseCase(this),
         createBluetoothDeviceCard = CreateBluetoothDeviceCardUseCase(this),
         listPairedBluetoothDevices = ListPairedBluetoothDevicesUseCase(EmptyPairedBluetoothDevicesPort),
+        observeConnectedBluetoothDevices = ObserveConnectedBluetoothDevicesUseCase(
+            FakeConnectedBluetoothDevicesPort(connectedDevicesFlow),
+        ),
         observeCards = ObserveCardsUseCase(this),
         updateTextCard = UpdateTextCardUseCase(this),
         updateWebCard = UpdateWebCardUseCase(this),
@@ -270,6 +351,14 @@ private fun DeckRepository.toUseCases(): DeckUseCases {
         observeOverlayHandPreference = ObserveOverlayHandPreferenceUseCase(appPreferenceRepository),
         setOverlayHandPreference = SetOverlayHandPreferenceUseCase(appPreferenceRepository),
     )
+}
+
+private class FakeConnectedBluetoothDevicesPort(
+    private val connectedDevicesFlow: Flow<List<ConnectedBluetoothDevice>>,
+) : ConnectedBluetoothDevicesPort {
+    override fun observeConnectedBluetoothDevices(): Flow<List<ConnectedBluetoothDevice>> {
+        return connectedDevicesFlow
+    }
 }
 
 private object EmptyPairedBluetoothDevicesPort : PairedBluetoothDevicesPort {

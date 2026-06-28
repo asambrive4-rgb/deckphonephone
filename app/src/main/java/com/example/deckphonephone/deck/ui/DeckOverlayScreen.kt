@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.DeckCategory
 
@@ -93,7 +94,7 @@ private fun DeckOverlayScreenContent(
     val overlayBorder = if (isCategoryOpen) {
         BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f))
     } else {
-        null
+        BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.30f))
     }
 
     Box(
@@ -117,7 +118,7 @@ private fun DeckOverlayScreenContent(
                         .padding(14.dp),
                 ) {
                     OverlayHeader(
-                        title = selectedCategory?.name ?: "DeckDeckDeck",
+                        title = selectedCategory?.name ?: "",
                         canGoBack = selectedCategory != null,
                         onBack = onBack,
                         onSettingsClicked = onSettingsClicked,
@@ -133,6 +134,7 @@ private fun DeckOverlayScreenContent(
                     } else {
                         ActionCardGrid(
                             cards = uiState.cards,
+                            connectedBluetoothDevices = uiState.connectedBluetoothDevices,
                             cardContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                             onCardClicked = onCardClicked,
                             onEmptyClicked = onSettingsClicked,
@@ -217,13 +219,14 @@ private fun CategoryGrid(
 @Composable
 private fun ActionCardGrid(
     cards: List<ActionCard>,
+    connectedBluetoothDevices: List<ConnectedBluetoothDevice>,
     cardContainerColor: Color,
     onCardClicked: (ActionCard) -> Unit,
     onEmptyClicked: () -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 88.dp),
-        contentPadding = PaddingValues(bottom = 8.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.heightIn(max = 474.dp),
@@ -240,6 +243,7 @@ private fun ActionCardGrid(
         items(cards, key = { it.id }) { card ->
             OverlayActionCard(
                 card = card,
+                connectedBluetoothDevices = connectedBluetoothDevices,
                 containerColor = cardContainerColor,
                 onClick = onCardClicked,
             )
@@ -269,6 +273,7 @@ private fun OverlayCategoryCard(
 @Composable
 private fun OverlayActionCard(
     card: ActionCard,
+    connectedBluetoothDevices: List<ConnectedBluetoothDevice>,
     containerColor: Color,
     onClick: (ActionCard) -> Unit,
 ) {
@@ -277,16 +282,19 @@ private fun OverlayActionCard(
     } else {
         "비활성 · ${card.action.deckLabel()}"
     }
+    val isConnectedBluetoothCard = card.hasConnectedBluetoothDevice(connectedBluetoothDevices)
 
     DeckCardSurface(
         onClick = { onClick(card) },
         modifier = Modifier.height(92.dp),
         enabled = card.isEnabled,
         containerColor = containerColor,
+        breathingGlow = isConnectedBluetoothCard,
     ) {
         DeckCardTextContent(
             title = card.title,
             label = actionLabel,
+            badgeText = if (isConnectedBluetoothCard) "연결됨" else null,
             labelColor = if (card.isEnabled) {
                 MaterialTheme.colorScheme.primary
             } else {

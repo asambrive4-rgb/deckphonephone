@@ -3,6 +3,7 @@ package com.example.deckphonephone.ui.theme
 import androidx.compose.ui.graphics.Color
 
 val SkyMain = Color(0xFFA1C6EA)
+val SkyMainAccent = Color(0xFF2F76B7)
 val SkyBackground = Color(0xFFF6FAFF)
 val SkySurface = Color(0xFFFFFFFF)
 val SkySurfaceSubtle = Color(0xFFEAF4FF)

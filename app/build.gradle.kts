@@ -75,3 +75,21 @@ dependencies {
 kapt {
     correctErrorTypes = true
 }
+
+val enableDebugAccessibility by tasks.registering(Exec::class) {
+    group = "development"
+    description = "Enable the app AccessibilityService on the connected debug device via ADB."
+    workingDir = rootProject.projectDir
+    commandLine(
+        "powershell",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        rootProject.file("scripts/enable-accessibility").absolutePath,
+    )
+}
+
+tasks.matching { it.name == "installDebug" }.configureEach {
+    finalizedBy(enableDebugAccessibility)
+}

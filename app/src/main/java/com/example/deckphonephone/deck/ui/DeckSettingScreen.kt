@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
 import com.example.deckphonephone.deck.application.OverlayHandPreference
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
@@ -98,7 +99,7 @@ fun DeckSettingScreen(
                 ),
                 title = {
                     Text(
-                        text = selectedCategory?.name ?: "DeckDeckDeck",
+                        text = selectedCategory?.name ?: "",
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -145,6 +146,7 @@ fun DeckSettingScreen(
         } else {
             CategoryDetailScreen(
                 cards = uiState.cards,
+                connectedBluetoothDevices = uiState.connectedBluetoothDevices,
                 onCreateCardRequested = onCreateCardRequested,
                 onCardClicked = onCardClicked,
                 onEditCard = onEditCard,
@@ -262,6 +264,7 @@ private fun HomeScreen(
 @Composable
 private fun CategoryDetailScreen(
     cards: List<ActionCard>,
+    connectedBluetoothDevices: List<ConnectedBluetoothDevice>,
     onCreateCardRequested: () -> Unit,
     onCardClicked: (ActionCard) -> Unit,
     onEditCard: (ActionCard) -> Unit,
@@ -271,7 +274,7 @@ private fun CategoryDetailScreen(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 132.dp),
-        contentPadding = PaddingValues(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 96.dp),
+        contentPadding = PaddingValues(start = 16.dp, top = 18.dp, end = 16.dp, bottom = 96.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier.fillMaxSize(),
@@ -287,6 +290,7 @@ private fun CategoryDetailScreen(
         items(cards, key = { it.id }) { card ->
             ActionCardView(
                 card = card,
+                connectedBluetoothDevices = connectedBluetoothDevices,
                 onClick = onCardClicked,
                 onEdit = { onEditCard(card) },
                 onToggleEnabled = { onToggleCardEnabled(card) },

@@ -9,6 +9,7 @@ data class DeckUseCases(
     val createWebCard: CreateWebCardUseCase,
     val createBluetoothDeviceCard: CreateBluetoothDeviceCardUseCase,
     val listPairedBluetoothDevices: ListPairedBluetoothDevicesUseCase,
+    val observeConnectedBluetoothDevices: ObserveConnectedBluetoothDevicesUseCase,
     val observeCards: ObserveCardsUseCase,
     val updateTextCard: UpdateTextCardUseCase,
     val updateWebCard: UpdateWebCardUseCase,

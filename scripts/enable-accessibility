@@ -1,0 +1,187 @@
+param(
+    [switch] $WaitForPackageUpdate,
+    [int] $PackageWaitTimeoutSeconds = 120,
+    [int] $PollIntervalSeconds = 1
+)
+
+$ErrorActionPreference = "Stop"
+
+function Find-Adb {
+    $adbFromPath = Get-Command adb -ErrorAction SilentlyContinue
+    if ($adbFromPath) {
+        return $adbFromPath.Source
+    }
+
+    $androidHome = $env:ANDROID_HOME
+    if (-not $androidHome) {
+        $androidHome = $env:ANDROID_SDK_ROOT
+    }
+
+    if ($androidHome) {
+        $adbFromSdk = Join-Path $androidHome "platform-tools\adb.exe"
+        if (Test-Path $adbFromSdk) {
+            return $adbFromSdk
+        }
+    }
+
+    throw "adb was not found. Add Android Studio platform-tools to PATH or set ANDROID_HOME."
+}
+
+function Get-ApplicationId {
+    param([string] $BuildGradlePath)
+
+    $content = Get-Content -Raw $BuildGradlePath
+    $match = [regex]::Match($content, 'applicationId\s*=\s*"([^"]+)"')
+    if (-not $match.Success) {
+        throw "applicationId was not found in app/build.gradle.kts."
+    }
+
+    return $match.Groups[1].Value
+}
+
+function Get-AccessibilityServiceName {
+    param([string] $ManifestPath)
+
+    $content = Get-Content -Raw $ManifestPath
+    $serviceMatches = [regex]::Matches($content, '(?s)<service\b.*?</service>')
+
+    foreach ($serviceMatch in $serviceMatches) {
+        $serviceBlock = $serviceMatch.Value
+        if ($serviceBlock -notmatch 'android\.permission\.BIND_ACCESSIBILITY_SERVICE') {
+            continue
+        }
+
+        $nameMatch = [regex]::Match($serviceBlock, 'android:name\s*=\s*"([^"]+)"')
+        if ($nameMatch.Success) {
+            return $nameMatch.Groups[1].Value
+        }
+    }
+
+    throw "AccessibilityService was not found in AndroidManifest.xml."
+}
+
+function Get-ComponentName {
+    param(
+        [string] $ApplicationId,
+        [string] $ServiceName
+    )
+
+    if ($ServiceName.StartsWith(".")) {
+        return "$ApplicationId/$ApplicationId$ServiceName"
+    }
+
+    if ($ServiceName.Contains(".")) {
+        return "$ApplicationId/$ServiceName"
+    }
+
+    return "$ApplicationId/$ApplicationId.$ServiceName"
+}
+
+function Assert-SingleDevice {
+    param([string] $Adb)
+
+    $deviceLines = & $Adb devices |
+        Select-Object -Skip 1 |
+        Where-Object { $_ -match "\sdevice$" }
+
+    $deviceCount = @($deviceLines).Count
+    if ($deviceCount -eq 0) {
+        throw "No connected ADB device. Check wireless debugging connection first."
+    }
+
+    if ($deviceCount -gt 1) {
+        throw "$deviceCount ADB devices are connected. This script supports a single connected device only."
+    }
+}
+
+function Get-PackageUpdateMarker {
+    param(
+        [string] $Adb,
+        [string] $ApplicationId
+    )
+
+    $packageInfo = (& $Adb shell dumpsys package $ApplicationId 2>$null) -join "`n"
+    if ($packageInfo -match "Unable to find package|not found") {
+        return ""
+    }
+
+    $lastUpdateMatch = [regex]::Match($packageInfo, "lastUpdateTime=([^\r\n]+)")
+    if ($lastUpdateMatch.Success) {
+        return $lastUpdateMatch.Groups[1].Value.Trim()
+    }
+
+    $pathMatch = [regex]::Match($packageInfo, "codePath=([^\r\n]+)")
+    if ($pathMatch.Success) {
+        return $pathMatch.Groups[1].Value.Trim()
+    }
+
+    return ""
+}
+
+function Wait-ForPackageUpdate {
+    param(
+        [string] $Adb,
+        [string] $ApplicationId,
+        [string] $InitialMarker,
+        [int] $TimeoutSeconds,
+        [int] $PollSeconds
+    )
+
+    $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        Start-Sleep -Seconds $PollSeconds
+
+        $currentMarker = Get-PackageUpdateMarker -Adb $Adb -ApplicationId $ApplicationId
+        if ($currentMarker -ne "" -and $currentMarker -ne $InitialMarker) {
+            Write-Host "Package update detected: $ApplicationId"
+            return
+        }
+
+        if ($InitialMarker -eq "" -and $currentMarker -ne "") {
+            Write-Host "Package install detected: $ApplicationId"
+            return
+        }
+    }
+
+    throw "Timed out waiting for package install/update: $ApplicationId"
+}
+
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$rootDir = Split-Path -Parent $scriptDir
+$applicationId = Get-ApplicationId -BuildGradlePath (Join-Path $rootDir "app\build.gradle.kts")
+$serviceName = Get-AccessibilityServiceName -ManifestPath (Join-Path $rootDir "app\src\main\AndroidManifest.xml")
+$componentName = Get-ComponentName -ApplicationId $applicationId -ServiceName $serviceName
+$adb = Find-Adb
+
+Assert-SingleDevice -Adb $adb
+
+if ($WaitForPackageUpdate) {
+    $initialMarker = Get-PackageUpdateMarker -Adb $adb -ApplicationId $applicationId
+    Wait-ForPackageUpdate `
+        -Adb $adb `
+        -ApplicationId $applicationId `
+        -InitialMarker $initialMarker `
+        -TimeoutSeconds $PackageWaitTimeoutSeconds `
+        -PollSeconds $PollIntervalSeconds
+}
+
+$currentValue = (& $adb shell settings get secure enabled_accessibility_services).Trim()
+if ($currentValue -eq "null") {
+    $currentValue = ""
+}
+
+$enabledServices = @()
+if ($currentValue -ne "") {
+    $enabledServices = $currentValue -split ":" | Where-Object { $_ -ne "" }
+}
+
+if ($enabledServices -contains $componentName) {
+    Write-Host "AccessibilityService is already enabled: $componentName"
+} else {
+    $newValue = (@($enabledServices) + $componentName) -join ":"
+    & $adb shell settings put secure enabled_accessibility_services $newValue
+    Write-Host "AccessibilityService appended: $componentName"
+}
+
+& $adb shell settings put secure accessibility_enabled 1
+Write-Host "accessibility_enabled=1 has been set."

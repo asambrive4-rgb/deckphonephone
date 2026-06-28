@@ -1,3 +1,5 @@
+Accessibility auto-enable must stay in developer ADB scripts such as scripts/enable-accessibility; never add it to app or release code.
+
 # AGENTS.md
 
 LLM 코딩 에이전트가 이 프로젝트에서 **필요한 부분만 정확히 바꾸고, 책임을 섞지 않으며, 검증 가능한 결과**를 내기 위한 지침입니다.

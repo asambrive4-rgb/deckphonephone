@@ -46,6 +46,7 @@ Quick Tap Action
 | 역할             | 색상        | 용도                     |
 | -------------- | --------- | ---------------------- |
 | Main           | `#a1c6ea` | 주요 브랜드 색, 선택 상태, 주요 버튼 |
+| Main Accent    | `#2f76b7` | Main보다 짙은 활성 상태 보조 강조, 연결 상태 칩 |
 | Background     | `#f6faff` | 앱 전체 배경                |
 | Surface        | `#ffffff` | 카드형 항목, 입력 영역, 시트      |
 | Surface Subtle | `#eaf4ff` | 빈 슬롯, 보조 영역, 선택 전 상태   |
@@ -98,7 +99,7 @@ Quick Tap Action
 | 카테고리 목록 화면의 오버레이 패널 배경 | `Surface #ffffff`, alpha 약 `0.96`                   |
 | 액션 카드 목록 화면의 오버레이 패널 배경 | `Background #f6faff`, alpha 약 `0.96`                |
 | 오버레이 패널 형태             | 8dp 둥근 사각형, 약한 elevation                            |
-| 오버레이 패널 테두리            | 액션 카드 목록 화면에 들어갔을 때만 `Main #a1c6ea`, alpha 약 `0.65` |
+| 오버레이 패널 테두리            | 카테고리 목록 화면: `Main #a1c6ea`, alpha 약 `0.30`<br>액션 카드 목록 화면: `Main #a1c6ea`, alpha 약 `0.65` |
 | 카테고리 목록 화면의 카테고리 카드 배경 | `Surface #ffffff`                                   |
 | 액션 카드 목록 화면의 액션 카드 배경  | `Surface Subtle #eaf4ff`                            |
 | 액션 카드 목록 화면의 빈 슬롯 배경   | `Surface Subtle #eaf4ff`                            |
