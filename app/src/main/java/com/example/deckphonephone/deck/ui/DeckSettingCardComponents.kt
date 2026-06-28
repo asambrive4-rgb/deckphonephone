@@ -34,7 +34,7 @@ internal fun CategoryCard(
 
     DeckCardSurface(
         onClick = onClick,
-        modifier = Modifier.height(96.dp),
+        modifier = Modifier.height(92.dp),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             DeckCardTextContent(
@@ -91,7 +91,7 @@ internal fun ActionCardView(
 
     DeckCardSurface(
         onClick = { onClick(card) },
-        modifier = Modifier.height(112.dp),
+        modifier = Modifier.height(92.dp),
         enabled = card.isEnabled,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {

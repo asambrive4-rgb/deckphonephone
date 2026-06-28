@@ -235,7 +235,7 @@ private fun OverlayCategoryCard(
 ) {
     DeckCardSurface(
         onClick = onClick,
-        modifier = Modifier.height(88.dp),
+        modifier = Modifier.height(92.dp),
     ) {
         DeckCardTextContent(
             title = category.name,
@@ -260,7 +260,7 @@ private fun OverlayActionCard(
 
     DeckCardSurface(
         onClick = { onClick(card) },
-        modifier = Modifier.height(96.dp),
+        modifier = Modifier.height(92.dp),
         enabled = card.isEnabled,
     ) {
         DeckCardTextContent(
