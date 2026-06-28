@@ -93,7 +93,97 @@ class DeckOverlayViewModelTest {
 
         viewModel.clear()
     }
+
+    @Test
+    fun `opening web card finishes overlay without message`() {
+        var finishCount = 0
+        val transientMessages = mutableListOf<String>()
+        val viewModel = DeckOverlayViewModel(
+            useCases = FakeDeckRepository(
+                cardsFlow = flowOf(emptyList()),
+            ).toUseCases(),
+            onFinished = { finishCount += 1 },
+            onTransientMessage = transientMessages::add,
+            dispatcher = Dispatchers.Unconfined,
+        )
+
+        viewModel.executeCard(webCard())
+
+        assertEquals(1, finishCount)
+        assertEquals(emptyList<String>(), transientMessages)
+        assertEquals(null, viewModel.uiState.value.message)
+
+        viewModel.clear()
+    }
+
+    @Test
+    fun `copying text card shows transient message and finishes overlay`() {
+        var finishCount = 0
+        val transientMessages = mutableListOf<String>()
+        val viewModel = DeckOverlayViewModel(
+            useCases = FakeDeckRepository(
+                cardsFlow = flowOf(emptyList()),
+            ).toUseCases(),
+            onFinished = { finishCount += 1 },
+            onTransientMessage = transientMessages::add,
+            dispatcher = Dispatchers.Unconfined,
+        )
+
+        viewModel.executeCard(textCard())
+
+        assertEquals(1, finishCount)
+        assertEquals(listOf("복사했습니다"), transientMessages)
+        assertEquals(null, viewModel.uiState.value.message)
+
+        viewModel.clear()
+    }
+
+    @Test
+    fun `starting bluetooth automation shows transient message and finishes overlay`() {
+        var finishCount = 0
+        val transientMessages = mutableListOf<String>()
+        val viewModel = DeckOverlayViewModel(
+            useCases = FakeDeckRepository(
+                cardsFlow = flowOf(emptyList()),
+            ).toUseCases(),
+            onFinished = { finishCount += 1 },
+            onTransientMessage = transientMessages::add,
+            dispatcher = Dispatchers.Unconfined,
+        )
+
+        viewModel.executeCard(bluetoothCard())
+
+        assertEquals(1, finishCount)
+        assertEquals(listOf("Bluetooth 설정에서 Buds을 찾는 중입니다."), transientMessages)
+        assertEquals(null, viewModel.uiState.value.message)
+
+        viewModel.clear()
+    }
 }
+
+private fun webCard() = ActionCard(
+    id = 20L,
+    categoryId = 1L,
+    title = "Web",
+    action = CardAction.OpenUrl("https://example.com"),
+)
+
+private fun textCard() = ActionCard(
+    id = 21L,
+    categoryId = 1L,
+    title = "Copy",
+    action = CardAction.CopyText("hello"),
+)
+
+private fun bluetoothCard() = ActionCard(
+    id = 22L,
+    categoryId = 1L,
+    title = "Buds",
+    action = CardAction.BluetoothDevice(
+        deviceName = "Buds",
+        deviceAddress = "AC:80:0A:20:CB:AF",
+    ),
+)
 
 private class FakeDeckRepository(
     private val cardsFlow: Flow<List<ActionCard>>,

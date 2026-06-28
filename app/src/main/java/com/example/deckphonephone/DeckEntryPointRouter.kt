@@ -24,7 +24,7 @@ import com.example.deckphonephone.deck.application.DeckSurfaceEntryPoint
 import com.example.deckphonephone.deck.application.DeckSurfacePolicy
 import com.example.deckphonephone.deck.platform.DeckOverlayService
 import com.example.deckphonephone.deck.ui.DeckOverlayPermissionScreen
-import com.example.deckphonephone.deck.ui.DeckSettingScreen
+import com.example.deckphonephone.deck.ui.DeckSettingRoute
 import com.example.deckphonephone.deck.ui.DeckSettingViewModel
 import com.example.deckphonephone.ui.theme.DeckphonephoneTheme
 
@@ -88,7 +88,7 @@ class DeckEntryPointRouter : ComponentActivity() {
                 val viewModel = viewModel<DeckSettingViewModel>(
                     factory = DeckSettingViewModel.Factory(appContainer.useCases),
                 )
-                DeckSettingScreen(
+                DeckSettingRoute(
                     viewModel = viewModel,
                     onExit = ::exitSettingScreen,
                 )

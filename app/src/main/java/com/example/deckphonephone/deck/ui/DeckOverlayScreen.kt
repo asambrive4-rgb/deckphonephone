@@ -1,5 +1,6 @@
 package com.example.deckphonephone.deck.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.deckphonephone.deck.domain.ActionCard
@@ -81,16 +83,29 @@ private fun DeckOverlayScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val selectedCategory = uiState.categories.firstOrNull { it.id == uiState.selectedCategoryId }
+    val isCategoryOpen = selectedCategory != null
+    val overlayShape = RoundedCornerShape(8.dp)
+    val overlayColor = if (isCategoryOpen) {
+        MaterialTheme.colorScheme.background.copy(alpha = 0.96f)
+    } else {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
+    }
+    val overlayBorder = if (isCategoryOpen) {
+        BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f))
+    } else {
+        null
+    }
 
     Box(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
-            tonalElevation = 6.dp,
-            shadowElevation = 10.dp,
+            shape = overlayShape,
+            color = overlayColor,
+            tonalElevation = if (isCategoryOpen) 8.dp else 6.dp,
+            shadowElevation = if (isCategoryOpen) 14.dp else 10.dp,
+            border = overlayBorder,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 220.dp, max = 560.dp),
@@ -118,6 +133,7 @@ private fun DeckOverlayScreenContent(
                     } else {
                         ActionCardGrid(
                             cards = uiState.cards,
+                            cardContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                             onCardClicked = onCardClicked,
                             onEmptyClicked = onSettingsClicked,
                         )
@@ -201,6 +217,7 @@ private fun CategoryGrid(
 @Composable
 private fun ActionCardGrid(
     cards: List<ActionCard>,
+    cardContainerColor: Color,
     onCardClicked: (ActionCard) -> Unit,
     onEmptyClicked: () -> Unit,
 ) {
@@ -216,12 +233,14 @@ private fun ActionCardGrid(
                 DeckEmptyCard(
                     text = "+ 카드 추가",
                     onClick = onEmptyClicked,
+                    containerColor = cardContainerColor,
                 )
             }
         }
         items(cards, key = { it.id }) { card ->
             OverlayActionCard(
                 card = card,
+                containerColor = cardContainerColor,
                 onClick = onCardClicked,
             )
         }
@@ -250,6 +269,7 @@ private fun OverlayCategoryCard(
 @Composable
 private fun OverlayActionCard(
     card: ActionCard,
+    containerColor: Color,
     onClick: (ActionCard) -> Unit,
 ) {
     val actionLabel = if (card.isEnabled) {
@@ -262,6 +282,7 @@ private fun OverlayActionCard(
         onClick = { onClick(card) },
         modifier = Modifier.height(92.dp),
         enabled = card.isEnabled,
+        containerColor = containerColor,
     ) {
         DeckCardTextContent(
             title = card.title,

@@ -6,12 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.deckphonephone.deck.application.DeckError
 import com.example.deckphonephone.deck.application.DeckResult
 import com.example.deckphonephone.deck.application.DeckUseCases
-import com.example.deckphonephone.deck.application.ExecuteCardResult
 import com.example.deckphonephone.deck.application.OverlayHandPreference
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.application.PairedBluetoothDevicesResult
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
 import com.example.deckphonephone.deck.domain.DeckCategory
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -346,14 +344,7 @@ class DeckSettingViewModel(
     fun requestEditCard(card: ActionCard) {
         _uiState.update {
             it.copy(
-                editingCard = CardEditState(
-                    cardId = card.id,
-                    title = card.title,
-                    payload = card.action.payload(),
-                    selectedCardType = card.action.cardType(),
-                    selectedBluetoothDevice = card.action.bluetoothDevice(),
-                    isEnabled = card.isEnabled,
-                ),
+                editingCard = card.toCardEditState(),
                 message = null,
             )
         }
@@ -508,36 +499,9 @@ class DeckSettingViewModel(
 
     fun executeCard(card: ActionCard) {
         viewModelScope.launch(dispatcher) {
-            when (val result = useCases.executeCard(card)) {
-                ExecuteCardResult.OpenedUrl -> Unit
-                ExecuteCardResult.CopiedText -> showMessage("복사했습니다")
-                ExecuteCardResult.DisabledCard -> showMessage("비활성화된 카드입니다.")
-                ExecuteCardResult.CopyTextBlank -> showMessage("복사할 문구가 없습니다")
-                ExecuteCardResult.OpenUrlFailed -> showMessage("웹페이지를 열지 못했습니다.")
-                ExecuteCardResult.CopyTextFailed -> showMessage("문구를 복사하지 못했습니다.")
-                is ExecuteCardResult.BluetoothAutomationStarted -> showMessage(
-                    "Bluetooth 설정에서 ${result.deviceName}을 찾는 중입니다.",
-                )
-
-                is ExecuteCardResult.BluetoothAccessibilityPermissionRequired -> showMessage(
-                    "접근성 설정에서 DeckDeckDeck을 켠 뒤 다시 탭해 주세요.",
-                )
-
-                ExecuteCardResult.BluetoothSettingsOpenFailed -> showMessage(
-                    "설정 화면을 열지 못했습니다.",
-                )
-
-                ExecuteCardResult.BluetoothAutomationAlreadyRunning -> showMessage(
-                    "Bluetooth 자동 실행이 이미 진행 중입니다.",
-                )
-
-                ExecuteCardResult.BluetoothDeviceAddressBlank -> showMessage(
-                    "블루투스 기기 주소를 찾지 못했습니다.",
-                )
-
-                ExecuteCardResult.BluetoothAutomationFailed -> showMessage(
-                    "블루투스 자동 실행을 시작하지 못했습니다.",
-                )
+            when (val feedback = useCases.executeCard(card).toSettingExecutionFeedback()) {
+                DeckSettingExecutionFeedback.None -> Unit
+                is DeckSettingExecutionFeedback.Message -> showMessage(feedback.message)
             }
         }
     }
@@ -547,7 +511,7 @@ class DeckSettingViewModel(
     }
 
     private fun showError(error: DeckError) {
-        showMessage(error.toMessage())
+        showMessage(error.toDeckSettingMessage())
     }
 
     private fun showMissingTarget() {
@@ -572,47 +536,6 @@ class DeckSettingViewModel(
 
     private fun showMessage(message: String) {
         _uiState.update { it.copy(message = message) }
-    }
-
-    private fun CardAction.payload(): String {
-        return when (this) {
-            is CardAction.CopyText -> text
-            is CardAction.OpenUrl -> url
-            is CardAction.BluetoothDevice -> deviceAddress
-        }
-    }
-
-    private fun CardAction.cardType(): CardType {
-        return when (this) {
-            is CardAction.CopyText -> CardType.Text
-            is CardAction.OpenUrl -> CardType.Web
-            is CardAction.BluetoothDevice -> CardType.Bluetooth
-        }
-    }
-
-    private fun CardAction.bluetoothDevice(): PairedBluetoothDevice? {
-        return when (this) {
-            is CardAction.BluetoothDevice -> PairedBluetoothDevice(
-                name = deviceName,
-                address = deviceAddress,
-            )
-
-            is CardAction.CopyText,
-            is CardAction.OpenUrl -> null
-        }
-    }
-
-    private fun DeckError.toMessage(): String {
-        return when (this) {
-            DeckError.CategoryNameBlank -> "카테고리 이름을 입력해 주세요."
-            DeckError.CardTitleBlank -> "슬롯 이름을 입력해 주세요."
-            DeckError.TextBlank -> "복사할 문구를 입력해 주세요."
-            DeckError.UrlBlank -> "열 웹페이지 주소를 입력해 주세요."
-            DeckError.InvalidUrl -> "웹 주소 형식이 올바르지 않습니다."
-            DeckError.CategoryNotSelected -> "카테고리를 먼저 선택해 주세요."
-            DeckError.BluetoothDeviceNotSelected -> "블루투스 기기를 선택해 주세요."
-            DeckError.BluetoothDeviceAddressBlank -> "블루투스 기기 주소를 찾지 못했습니다."
-        }
     }
 
     class Factory(

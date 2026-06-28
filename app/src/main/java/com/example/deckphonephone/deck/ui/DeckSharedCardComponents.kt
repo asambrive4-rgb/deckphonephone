@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -34,6 +35,7 @@ internal fun DeckCardSurface(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    containerColor: Color? = null,
     content: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -42,6 +44,7 @@ internal fun DeckCardSurface(
         targetValue = if (isPressed && enabled) 0.97f else 1f,
         label = "deck-card-press-scale",
     )
+    val resolvedContainerColor = containerColor ?: MaterialTheme.colorScheme.surface
 
     Card(
         onClick = onClick,
@@ -49,8 +52,8 @@ internal fun DeckCardSurface(
         interactionSource = interactionSource,
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            disabledContainerColor = MaterialTheme.colorScheme.surface,
+            containerColor = resolvedContainerColor,
+            disabledContainerColor = resolvedContainerColor,
         ),
         elevation = CardDefaults.elevatedCardElevation(
             defaultElevation = 2.dp,
@@ -109,11 +112,14 @@ internal fun DeckEmptyCard(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    containerColor: Color? = null,
 ) {
+    val resolvedContainerColor = containerColor ?: MaterialTheme.colorScheme.surfaceVariant
+
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = resolvedContainerColor,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = modifier
             .fillMaxWidth()

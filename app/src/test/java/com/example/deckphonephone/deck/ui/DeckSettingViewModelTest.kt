@@ -124,6 +124,43 @@ class DeckSettingViewModelTest {
     }
 
     @Test
+    fun `executing copied text card shows feedback message`() {
+        val viewModel = DeckSettingViewModel(
+            useCases = FakeSettingDeckRepository().toUseCases(),
+            dispatcher = Dispatchers.Unconfined,
+        )
+        val card = ActionCard(
+            id = 1L,
+            categoryId = 1L,
+            title = "복사 슬롯",
+            action = CardAction.CopyText("hello"),
+        )
+
+        viewModel.executeCard(card)
+
+        assertEquals("복사했습니다", viewModel.uiState.value.message)
+    }
+
+    @Test
+    fun `executing disabled card shows feedback message`() {
+        val viewModel = DeckSettingViewModel(
+            useCases = FakeSettingDeckRepository().toUseCases(),
+            dispatcher = Dispatchers.Unconfined,
+        )
+        val card = ActionCard(
+            id = 1L,
+            categoryId = 1L,
+            title = "비활성 슬롯",
+            action = CardAction.CopyText("hello"),
+            isEnabled = false,
+        )
+
+        viewModel.executeCard(card)
+
+        assertEquals("비활성화된 카드입니다.", viewModel.uiState.value.message)
+    }
+
+    @Test
     fun `selecting bluetooth device fills blank card title`() {
         val viewModel = DeckSettingViewModel(
             useCases = FakeSettingDeckRepository().toUseCases(),
