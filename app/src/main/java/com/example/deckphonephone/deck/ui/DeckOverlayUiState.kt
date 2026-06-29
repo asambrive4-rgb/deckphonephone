@@ -8,8 +8,8 @@ data class DeckOverlayUiState(
     val categories: List<DeckCategory> = emptyList(),
     val isCategoriesLoading: Boolean = true,
     val selectedCategoryId: Long? = null,
-    val cards: List<ActionCard> = emptyList(),
+    val actionCards: List<ActionCard> = emptyList(),
     val connectedBluetoothDevices: List<ConnectedBluetoothDevice> = emptyList(),
-    val isCardsLoading: Boolean = false,
+    val isActionCardsLoading: Boolean = false,
     val message: String? = null,
 )

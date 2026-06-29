@@ -1,13 +1,13 @@
 package com.example.deckphonephone.deck.data.local
 
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
+import com.example.deckphonephone.deck.domain.ActionCardOperation
 import com.example.deckphonephone.deck.domain.DeckCategory
 
-internal const val ACTION_COPY_TEXT = "copy_text"
-private const val ACTION_TEXT_PASTE = "text_paste"
-internal const val ACTION_OPEN_URL = "open_url"
-internal const val ACTION_BLUETOOTH_DEVICE = "bluetooth_device"
+internal const val OPERATION_COPY_TEXT = "copy_text"
+private const val OPERATION_TEXT_PASTE = "text_paste"
+internal const val OPERATION_OPEN_URL = "open_url"
+internal const val OPERATION_BLUETOOTH_DEVICE = "bluetooth_device"
 
 fun CategoryEntity.toDomain() = DeckCategory(
     id = id,
@@ -21,18 +21,18 @@ fun ActionCardEntity.toDomain() = ActionCard(
     categoryId = categoryId,
     title = title,
     description = description,
-    action = when (actionType) {
-        ACTION_COPY_TEXT,
-        ACTION_TEXT_PASTE -> CardAction.CopyText(textValue.orEmpty())
+    operation = when (operationType) {
+        OPERATION_COPY_TEXT,
+        OPERATION_TEXT_PASTE -> ActionCardOperation.CopyText(textValue.orEmpty())
 
-        ACTION_OPEN_URL -> CardAction.OpenUrl(urlValue.orEmpty())
+        OPERATION_OPEN_URL -> ActionCardOperation.OpenUrl(urlValue.orEmpty())
 
-        ACTION_BLUETOOTH_DEVICE -> CardAction.BluetoothDevice(
+        OPERATION_BLUETOOTH_DEVICE -> ActionCardOperation.BluetoothDevice(
             deviceName = bluetoothDeviceName.orEmpty(),
             deviceAddress = bluetoothDeviceAddress.orEmpty(),
         )
 
-        else -> error("Unknown card action type: $actionType")
+        else -> error("Unknown card operation type: $operationType")
     },
     isEnabled = isEnabled,
 )
@@ -47,38 +47,38 @@ fun newCategoryEntity(
     isEnabled = isEnabled,
 )
 
-fun newCardEntity(
+fun newActionCardEntity(
     categoryId: Long,
     title: String,
     description: String,
-    action: CardAction,
+    operation: ActionCardOperation,
     isEnabled: Boolean,
-) = when (action) {
-    is CardAction.CopyText -> ActionCardEntity(
+) = when (operation) {
+    is ActionCardOperation.CopyText -> ActionCardEntity(
         categoryId = categoryId,
         title = title,
         description = description,
-        actionType = ACTION_COPY_TEXT,
-        textValue = action.text,
+        operationType = OPERATION_COPY_TEXT,
+        textValue = operation.text,
         isEnabled = isEnabled,
     )
 
-    is CardAction.OpenUrl -> ActionCardEntity(
+    is ActionCardOperation.OpenUrl -> ActionCardEntity(
         categoryId = categoryId,
         title = title,
         description = description,
-        actionType = ACTION_OPEN_URL,
-        urlValue = action.url,
+        operationType = OPERATION_OPEN_URL,
+        urlValue = operation.url,
         isEnabled = isEnabled,
     )
 
-    is CardAction.BluetoothDevice -> ActionCardEntity(
+    is ActionCardOperation.BluetoothDevice -> ActionCardEntity(
         categoryId = categoryId,
         title = title,
         description = description,
-        actionType = ACTION_BLUETOOTH_DEVICE,
-        bluetoothDeviceName = action.deviceName,
-        bluetoothDeviceAddress = action.deviceAddress,
+        operationType = OPERATION_BLUETOOTH_DEVICE,
+        bluetoothDeviceName = operation.deviceName,
+        bluetoothDeviceAddress = operation.deviceAddress,
         isEnabled = isEnabled,
     )
 }

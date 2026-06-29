@@ -1,11 +1,11 @@
 package com.example.deckphonephone.deck.application
 
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
+import com.example.deckphonephone.deck.domain.ActionCardOperation
 import com.example.deckphonephone.deck.domain.UrlNormalizationResult
 import com.example.deckphonephone.deck.domain.UrlNormalizer
 
-class UpdateWebCardUseCase(
+class UpdateWebActionCardUseCase(
     private val repository: DeckRepository,
 ) {
     suspend operator fun invoke(
@@ -15,7 +15,7 @@ class UpdateWebCardUseCase(
     ): DeckResult<ActionCard> {
         val trimmedTitle = title.trim()
         if (trimmedTitle.isEmpty()) {
-            return DeckResult.Failure(DeckError.CardTitleBlank)
+            return DeckResult.Failure(DeckError.ActionCardTitleBlank)
         }
         if (rawUrl.isBlank()) {
             return DeckResult.Failure(DeckError.UrlBlank)
@@ -27,10 +27,10 @@ class UpdateWebCardUseCase(
         }
 
         return DeckResult.Success(
-            repository.updateCard(
+            repository.updateActionCard(
                 card.copy(
                     title = trimmedTitle,
-                    action = CardAction.OpenUrl(normalizedUrl),
+                    operation = ActionCardOperation.OpenUrl(normalizedUrl),
                 ),
             ),
         )

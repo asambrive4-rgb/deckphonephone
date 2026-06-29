@@ -10,14 +10,14 @@ class ObserveUseCaseTest {
     fun `created category and card can be observed`() = runBlocking {
         val repository = FakeDeckRepository()
         val createCategory = CreateCategoryUseCase(repository)
-        val createTextCard = CreateTextCardUseCase(repository)
+        val createTextActionCard = CreateTextActionCardUseCase(repository)
         val observeCategories = ObserveCategoriesUseCase(repository)
-        val observeCards = ObserveCardsUseCase(repository)
+        val observeActionCards = ObserveActionCardsUseCase(repository)
 
         val category = (createCategory("AI 프롬프트") as DeckResult.Success).value
-        createTextCard(category.id, "요약", "다음 내용을 요약해줘")
+        createTextActionCard(category.id, "요약", "다음 내용을 요약해줘")
 
         assertEquals(listOf(category), observeCategories().first())
-        assertEquals(1, observeCards(category.id).first().size)
+        assertEquals(1, observeActionCards(category.id).first().size)
     }
 }

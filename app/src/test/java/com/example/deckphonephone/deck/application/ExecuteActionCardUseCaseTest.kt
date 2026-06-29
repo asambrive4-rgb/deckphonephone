@@ -1,16 +1,16 @@
 package com.example.deckphonephone.deck.application
 
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
+import com.example.deckphonephone.deck.domain.ActionCardOperation
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class ExecuteCardUseCaseTest {
+class ExecuteActionCardUseCaseTest {
     private val openUrlPort = FakeOpenUrlPort()
     private val copyTextPort = FakeCopyTextPort()
     private val bluetoothDeviceActionPort = FakeBluetoothDeviceActionPort()
-    private val executeCard = ExecuteCardUseCase(
+    private val executeActionCard = ExecuteActionCardUseCase(
         openUrlPort = openUrlPort,
         copyTextPort = copyTextPort,
         bluetoothDeviceActionPort = bluetoothDeviceActionPort,
@@ -20,9 +20,9 @@ class ExecuteCardUseCaseTest {
     fun `web card opens url through port`() = runBlocking {
         val card = webCard(url = "https://example.com")
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.OpenedUrl, result)
+        assertEquals(ExecuteActionCardResult.OpenedUrl, result)
         assertEquals(listOf("https://example.com"), openUrlPort.openedUrls)
     }
 
@@ -31,9 +31,9 @@ class ExecuteCardUseCaseTest {
         openUrlPort.result = OpenUrlResult.Failure
         val card = webCard(url = "https://example.com")
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.OpenUrlFailed, result)
+        assertEquals(ExecuteActionCardResult.OpenUrlFailed, result)
         assertEquals(listOf("https://example.com"), openUrlPort.openedUrls)
     }
 
@@ -41,9 +41,9 @@ class ExecuteCardUseCaseTest {
     fun `text card copies text through port`() = runBlocking {
         val card = textCard(text = "hello")
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.CopiedText, result)
+        assertEquals(ExecuteActionCardResult.CopiedText, result)
         assertEquals(listOf("hello"), copyTextPort.copiedTexts)
     }
 
@@ -52,9 +52,9 @@ class ExecuteCardUseCaseTest {
         copyTextPort.result = CopyTextResult.Failure
         val card = textCard(text = "hello")
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.CopyTextFailed, result)
+        assertEquals(ExecuteActionCardResult.CopyTextFailed, result)
         assertEquals(listOf("hello"), copyTextPort.copiedTexts)
     }
 
@@ -62,19 +62,19 @@ class ExecuteCardUseCaseTest {
     fun `text card returns blank result without calling port when text is blank`() = runBlocking {
         val card = textCard(text = " ")
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.CopyTextBlank, result)
+        assertEquals(ExecuteActionCardResult.CopyTextBlank, result)
         assertEquals(emptyList<String>(), copyTextPort.copiedTexts)
     }
 
     @Test
-    fun `bluetooth card starts action through port`() = runBlocking {
+    fun `bluetooth card starts operation through port`() = runBlocking {
         val card = bluetoothCard()
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.BluetoothAutomationStarted("Buds"), result)
+        assertEquals(ExecuteActionCardResult.BluetoothAutomationStarted("Buds"), result)
         assertEquals(listOf("Buds" to "AC:80:0A:20:CB:AF"), bluetoothDeviceActionPort.requests)
         assertEquals(emptyList<String>(), openUrlPort.openedUrls)
         assertEquals(emptyList<String>(), copyTextPort.copiedTexts)
@@ -85,9 +85,9 @@ class ExecuteCardUseCaseTest {
         bluetoothDeviceActionPort.result = BluetoothDeviceActionResult.AccessibilityPermissionRequired
         val card = bluetoothCard()
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.BluetoothAccessibilityPermissionRequired("Buds"), result)
+        assertEquals(ExecuteActionCardResult.BluetoothAccessibilityPermissionRequired("Buds"), result)
     }
 
     @Test
@@ -95,9 +95,9 @@ class ExecuteCardUseCaseTest {
         bluetoothDeviceActionPort.result = BluetoothDeviceActionResult.SettingsOpenFailed
         val card = bluetoothCard()
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.BluetoothSettingsOpenFailed, result)
+        assertEquals(ExecuteActionCardResult.BluetoothSettingsOpenFailed, result)
     }
 
     @Test
@@ -105,9 +105,9 @@ class ExecuteCardUseCaseTest {
         bluetoothDeviceActionPort.result = BluetoothDeviceActionResult.AlreadyRunning
         val card = bluetoothCard()
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.BluetoothAutomationAlreadyRunning, result)
+        assertEquals(ExecuteActionCardResult.BluetoothAutomationAlreadyRunning, result)
     }
 
     @Test
@@ -115,18 +115,18 @@ class ExecuteCardUseCaseTest {
         bluetoothDeviceActionPort.result = BluetoothDeviceActionResult.Failure
         val card = bluetoothCard()
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.BluetoothAutomationFailed, result)
+        assertEquals(ExecuteActionCardResult.BluetoothAutomationFailed, result)
     }
 
     @Test
     fun `bluetooth card returns blank address without calling port`() = runBlocking {
         val card = bluetoothCard(address = " ")
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.BluetoothDeviceAddressBlank, result)
+        assertEquals(ExecuteActionCardResult.BluetoothDeviceAddressBlank, result)
         assertEquals(emptyList<Pair<String, String>>(), bluetoothDeviceActionPort.requests)
     }
 
@@ -134,9 +134,9 @@ class ExecuteCardUseCaseTest {
     fun `disabled card does not call execution ports`() = runBlocking {
         val card = webCard(url = "https://example.com").copy(isEnabled = false)
 
-        val result = executeCard(card)
+        val result = executeActionCard(card)
 
-        assertEquals(ExecuteCardResult.DisabledCard, result)
+        assertEquals(ExecuteActionCardResult.DisabledActionCard, result)
         assertEquals(emptyList<String>(), openUrlPort.openedUrls)
         assertEquals(emptyList<String>(), copyTextPort.copiedTexts)
         assertEquals(emptyList<Pair<String, String>>(), bluetoothDeviceActionPort.requests)
@@ -146,14 +146,14 @@ class ExecuteCardUseCaseTest {
         id = 1,
         categoryId = 1,
         title = "Web",
-        action = CardAction.OpenUrl(url),
+        operation = ActionCardOperation.OpenUrl(url),
     )
 
     private fun textCard(text: String) = ActionCard(
         id = 1,
         categoryId = 1,
         title = "Text",
-        action = CardAction.CopyText(text),
+        operation = ActionCardOperation.CopyText(text),
     )
 
     private fun bluetoothCard(
@@ -163,7 +163,7 @@ class ExecuteCardUseCaseTest {
         id = 1,
         categoryId = 1,
         title = "Buds",
-        action = CardAction.BluetoothDevice(
+        operation = ActionCardOperation.BluetoothDevice(
             deviceName = name,
             deviceAddress = address,
         ),

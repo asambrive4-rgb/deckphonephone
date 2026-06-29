@@ -26,7 +26,7 @@ data class ActionCardEntity(
     val title: String,
     val description: String = "",
     @ColumnInfo(name = "action_type")
-    val actionType: String,
+    val operationType: String,
     @ColumnInfo(name = "text_value")
     val textValue: String? = null,
     @ColumnInfo(name = "url_value")

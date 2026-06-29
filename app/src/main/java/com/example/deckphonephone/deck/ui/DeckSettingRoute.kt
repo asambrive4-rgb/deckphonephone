@@ -50,13 +50,13 @@ fun DeckSettingRoute(
     }
 
     LaunchedEffect(
-        uiState.isCreatingCard,
-        uiState.selectedCardType,
-        uiState.editingCard?.cardId,
-        uiState.editingCard?.selectedCardType,
+        uiState.isCreatingActionCard,
+        uiState.selectedActionCardType,
+        uiState.editingActionCard?.actionCardId,
+        uiState.editingActionCard?.selectedActionCardType,
     ) {
-        val createNeedsBluetooth = uiState.isCreatingCard && uiState.selectedCardType == CardType.Bluetooth
-        val editNeedsBluetooth = uiState.editingCard?.selectedCardType == CardType.Bluetooth
+        val createNeedsBluetooth = uiState.isCreatingActionCard && uiState.selectedActionCardType == ActionCardType.Bluetooth
+        val editNeedsBluetooth = uiState.editingActionCard?.selectedActionCardType == ActionCardType.Bluetooth
         if (createNeedsBluetooth || editNeedsBluetooth) {
             requestBluetoothPermissionOrLoadDevices()
         }
@@ -90,31 +90,31 @@ fun DeckSettingRoute(
         onEditCategory = viewModel::requestEditCategory,
         onDeleteCategory = viewModel::requestDeleteCategory,
         onBack = viewModel::leaveCategory,
-        onCardTitleChanged = viewModel::onCardTitleChanged,
-        onCardPayloadChanged = viewModel::onCardPayloadChanged,
-        onCardTypeChanged = viewModel::onCardTypeChanged,
+        onActionCardTitleChanged = viewModel::onActionCardTitleChanged,
+        onActionCardPayloadChanged = viewModel::onActionCardPayloadChanged,
+        onActionCardTypeChanged = viewModel::onActionCardTypeChanged,
         onBluetoothDeviceSelected = viewModel::onBluetoothDeviceSelected,
-        onCreateCardRequested = viewModel::requestCreateCard,
-        onDismissCreateCard = viewModel::dismissCreateCard,
+        onCreateActionCardRequested = viewModel::requestCreateActionCard,
+        onDismissCreateActionCard = viewModel::dismissCreateActionCard,
         onOpenAppSettings = viewModel::requestAppSettings,
         onDismissAppSettings = viewModel::dismissAppSettings,
         onDarkThemeChanged = viewModel::setDarkTheme,
         onOverlayRightHandedChanged = viewModel::setOverlayRightHanded,
-        onCreateCard = viewModel::createCard,
-        onCardClicked = viewModel::executeCard,
-        onEditCard = viewModel::requestEditCard,
-        onToggleCardEnabled = viewModel::toggleCardEnabled,
-        onDeleteCard = viewModel::requestDeleteCard,
+        onCreateActionCard = viewModel::createActionCard,
+        onActionCardClicked = viewModel::executeActionCard,
+        onEditActionCard = viewModel::requestEditActionCard,
+        onToggleActionCardEnabled = viewModel::toggleActionCardEnabled,
+        onDeleteActionCard = viewModel::requestDeleteActionCard,
         onEditingCategoryNameChanged = viewModel::onEditingCategoryNameChanged,
         onSaveCategoryEdit = viewModel::saveCategoryEdit,
         onDismissCategoryEdit = viewModel::dismissCategoryEdit,
-        onEditingCardTitleChanged = viewModel::onEditingCardTitleChanged,
-        onEditingCardPayloadChanged = viewModel::onEditingCardPayloadChanged,
-        onEditingCardTypeChanged = viewModel::onEditingCardTypeChanged,
+        onEditingActionCardTitleChanged = viewModel::onEditingActionCardTitleChanged,
+        onEditingActionCardPayloadChanged = viewModel::onEditingActionCardPayloadChanged,
+        onEditingActionCardTypeChanged = viewModel::onEditingActionCardTypeChanged,
         onEditingBluetoothDeviceSelected = viewModel::onEditingBluetoothDeviceSelected,
-        onEditingCardEnabledChanged = viewModel::onEditingCardEnabledChanged,
-        onSaveCardEdit = viewModel::saveCardEdit,
-        onDismissCardEdit = viewModel::dismissCardEdit,
+        onEditingActionCardEnabledChanged = viewModel::onEditingActionCardEnabledChanged,
+        onSaveActionCardEdit = viewModel::saveActionCardEdit,
+        onDismissActionCardEdit = viewModel::dismissActionCardEdit,
         onConfirmDelete = viewModel::confirmDelete,
         onDismissDelete = viewModel::dismissDeleteConfirmation,
         modifier = modifier,

@@ -48,20 +48,20 @@ class DeckOverlayViewModel(
     fun selectCategory(categoryId: Long) {
         _uiState.update {
             it.copy(
-                cards = emptyList(),
-                isCardsLoading = true,
+                actionCards = emptyList(),
+                isActionCardsLoading = true,
                 message = null,
             )
         }
 
         cardsJob?.cancel()
         cardsJob = scope.launch {
-            useCases.observeCards(categoryId).collect { cards ->
+            useCases.observeActionCards(categoryId).collect { actionCards ->
                 _uiState.update {
                     it.copy(
                         selectedCategoryId = categoryId,
-                        cards = cards,
-                        isCardsLoading = false,
+                        actionCards = actionCards,
+                        isActionCardsLoading = false,
                     )
                 }
             }
@@ -80,9 +80,9 @@ class DeckOverlayViewModel(
         onFinished()
     }
 
-    fun executeCard(card: ActionCard) {
+    fun executeActionCard(card: ActionCard) {
         scope.launch {
-            val feedback = useCases.executeCard(card).toOverlayExecutionFeedback()
+            val feedback = useCases.executeActionCard(card).toOverlayExecutionFeedback()
             feedback.message?.let { message ->
                 if (feedback.isTransientMessage) {
                     onTransientMessage(message)
@@ -111,8 +111,8 @@ class DeckOverlayViewModel(
         _uiState.update {
             it.copy(
                 selectedCategoryId = null,
-                cards = emptyList(),
-                isCardsLoading = false,
+                actionCards = emptyList(),
+                isActionCardsLoading = false,
                 message = null,
             )
         }

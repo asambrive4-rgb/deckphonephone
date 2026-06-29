@@ -74,12 +74,12 @@ class DeckSettingViewModel(
         _uiState.update { it.copy(isCreatingCategory = false) }
     }
 
-    fun requestCreateCard() {
-        _uiState.update { it.copy(isCreatingCard = true, message = null) }
+    fun requestCreateActionCard() {
+        _uiState.update { it.copy(isCreatingActionCard = true, message = null) }
     }
 
-    fun dismissCreateCard() {
-        _uiState.update { it.copy(isCreatingCard = false) }
+    fun dismissCreateActionCard() {
+        _uiState.update { it.copy(isCreatingActionCard = false) }
     }
 
     fun requestAppSettings() {
@@ -187,23 +187,23 @@ class DeckSettingViewModel(
     fun selectCategory(categoryId: Long) {
         _uiState.update {
             it.copy(
-                cards = emptyList(),
-                isCardsLoading = true,
-                cardTitleInput = "",
-                cardPayloadInput = "",
+                actionCards = emptyList(),
+                isActionCardsLoading = true,
+                actionCardTitleInput = "",
+                actionCardPayloadInput = "",
                 selectedBluetoothDevice = null,
-                isCreatingCard = false,
+                isCreatingActionCard = false,
             )
         }
 
         cardsJob?.cancel()
         cardsJob = viewModelScope.launch(dispatcher) {
-            useCases.observeCards(categoryId).collect { cards ->
+            useCases.observeActionCards(categoryId).collect { actionCards ->
                 _uiState.update {
                     it.copy(
                         selectedCategoryId = categoryId,
-                        cards = cards,
-                        isCardsLoading = false,
+                        actionCards = actionCards,
+                        isActionCardsLoading = false,
                     )
                 }
             }
@@ -216,30 +216,30 @@ class DeckSettingViewModel(
         _uiState.update {
             it.copy(
                 selectedCategoryId = null,
-                cards = emptyList(),
-                isCardsLoading = false,
-                cardTitleInput = "",
-                cardPayloadInput = "",
+                actionCards = emptyList(),
+                isActionCardsLoading = false,
+                actionCardTitleInput = "",
+                actionCardPayloadInput = "",
                 selectedBluetoothDevice = null,
-                isCreatingCard = false,
+                isCreatingActionCard = false,
             )
         }
     }
 
-    fun onCardTitleChanged(value: String) {
-        _uiState.update { it.copy(cardTitleInput = value) }
+    fun onActionCardTitleChanged(value: String) {
+        _uiState.update { it.copy(actionCardTitleInput = value) }
     }
 
-    fun onCardPayloadChanged(value: String) {
-        _uiState.update { it.copy(cardPayloadInput = value) }
+    fun onActionCardPayloadChanged(value: String) {
+        _uiState.update { it.copy(actionCardPayloadInput = value) }
     }
 
-    fun onCardTypeChanged(type: CardType) {
+    fun onActionCardTypeChanged(type: ActionCardType) {
         _uiState.update { state ->
             state.copy(
-                selectedCardType = type,
-                cardPayloadInput = "",
-                selectedBluetoothDevice = if (type == CardType.Bluetooth) {
+                selectedActionCardType = type,
+                actionCardPayloadInput = "",
+                selectedBluetoothDevice = if (type == ActionCardType.Bluetooth) {
                     state.selectedBluetoothDevice
                 } else {
                     null
@@ -284,24 +284,24 @@ class DeckSettingViewModel(
         _uiState.update { state ->
             state.copy(
                 selectedBluetoothDevice = device,
-                cardTitleInput = if (state.cardTitleInput.isBlank()) device.name else state.cardTitleInput,
+                actionCardTitleInput = if (state.actionCardTitleInput.isBlank()) device.name else state.actionCardTitleInput,
             )
         }
     }
 
     fun onEditingBluetoothDeviceSelected(device: PairedBluetoothDevice) {
         _uiState.update { state ->
-            val editingCard = state.editingCard ?: return@update state
+            val editingActionCard = state.editingActionCard ?: return@update state
             state.copy(
-                editingCard = editingCard.copy(
+                editingActionCard = editingActionCard.copy(
                     selectedBluetoothDevice = device,
-                    title = if (editingCard.title.isBlank()) device.name else editingCard.title,
+                    title = if (editingActionCard.title.isBlank()) device.name else editingActionCard.title,
                 ),
             )
         }
     }
 
-    fun createCard() {
+    fun createActionCard() {
         val state = _uiState.value
         val categoryId = state.selectedCategoryId
         if (categoryId == null) {
@@ -310,22 +310,22 @@ class DeckSettingViewModel(
         }
 
         viewModelScope.launch(dispatcher) {
-            val result = when (state.selectedCardType) {
-                CardType.Text -> useCases.createTextCard(
+            val result = when (state.selectedActionCardType) {
+                ActionCardType.Text -> useCases.createTextActionCard(
                     categoryId = categoryId,
-                    title = state.cardTitleInput,
-                    text = state.cardPayloadInput,
+                    title = state.actionCardTitleInput,
+                    text = state.actionCardPayloadInput,
                 )
 
-                CardType.Web -> useCases.createWebCard(
+                ActionCardType.Web -> useCases.createWebActionCard(
                     categoryId = categoryId,
-                    title = state.cardTitleInput,
-                    rawUrl = state.cardPayloadInput,
+                    title = state.actionCardTitleInput,
+                    rawUrl = state.actionCardPayloadInput,
                 )
 
-                CardType.Bluetooth -> useCases.createBluetoothDeviceCard(
+                ActionCardType.Bluetooth -> useCases.createBluetoothDeviceActionCard(
                     categoryId = categoryId,
-                    title = state.cardTitleInput,
+                    title = state.actionCardTitleInput,
                     device = state.selectedBluetoothDevice,
                 )
             }
@@ -334,11 +334,11 @@ class DeckSettingViewModel(
                 is DeckResult.Success -> {
                     _uiState.update {
                         it.copy(
-                            cardTitleInput = "",
-                            cardPayloadInput = "",
+                            actionCardTitleInput = "",
+                            actionCardPayloadInput = "",
                             selectedBluetoothDevice = null,
-                            isCreatingCard = false,
-                            message = "카드를 저장했습니다.",
+                            isCreatingActionCard = false,
+                            message = "액션 카드를 저장했습니다.",
                         )
                     }
                 }
@@ -348,36 +348,36 @@ class DeckSettingViewModel(
         }
     }
 
-    fun requestEditCard(card: ActionCard) {
+    fun requestEditActionCard(card: ActionCard) {
         _uiState.update {
             it.copy(
-                editingCard = card.toCardEditState(),
+                editingActionCard = card.toActionCardEditState(),
                 message = null,
             )
         }
     }
 
-    fun onEditingCardTitleChanged(value: String) {
+    fun onEditingActionCardTitleChanged(value: String) {
         _uiState.update { state ->
-            state.copy(editingCard = state.editingCard?.copy(title = value))
+            state.copy(editingActionCard = state.editingActionCard?.copy(title = value))
         }
     }
 
-    fun onEditingCardPayloadChanged(value: String) {
+    fun onEditingActionCardPayloadChanged(value: String) {
         _uiState.update { state ->
-            state.copy(editingCard = state.editingCard?.copy(payload = value))
+            state.copy(editingActionCard = state.editingActionCard?.copy(payload = value))
         }
     }
 
-    fun onEditingCardTypeChanged(type: CardType) {
+    fun onEditingActionCardTypeChanged(type: ActionCardType) {
         _uiState.update { state ->
-            val editingCard = state.editingCard ?: return@update state
+            val editingActionCard = state.editingActionCard ?: return@update state
             state.copy(
-                editingCard = editingCard.copy(
-                    selectedCardType = type,
-                    payload = if (editingCard.selectedCardType == type) editingCard.payload else "",
-                    selectedBluetoothDevice = if (type == CardType.Bluetooth) {
-                        editingCard.selectedBluetoothDevice
+                editingActionCard = editingActionCard.copy(
+                    selectedActionCardType = type,
+                    payload = if (editingActionCard.selectedActionCardType == type) editingActionCard.payload else "",
+                    selectedBluetoothDevice = if (type == ActionCardType.Bluetooth) {
+                        editingActionCard.selectedBluetoothDevice
                     } else {
                         null
                     },
@@ -386,20 +386,20 @@ class DeckSettingViewModel(
         }
     }
 
-    fun onEditingCardEnabledChanged(isEnabled: Boolean) {
+    fun onEditingActionCardEnabledChanged(isEnabled: Boolean) {
         _uiState.update { state ->
-            state.copy(editingCard = state.editingCard?.copy(isEnabled = isEnabled))
+            state.copy(editingActionCard = state.editingActionCard?.copy(isEnabled = isEnabled))
         }
     }
 
-    fun dismissCardEdit() {
-        _uiState.update { it.copy(editingCard = null) }
+    fun dismissActionCardEdit() {
+        _uiState.update { it.copy(editingActionCard = null) }
     }
 
-    fun saveCardEdit() {
+    fun saveActionCardEdit() {
         val state = _uiState.value
-        val editState = state.editingCard ?: return
-        val card = state.cards.firstOrNull { it.id == editState.cardId }
+        val editState = state.editingActionCard ?: return
+        val card = state.actionCards.firstOrNull { it.id == editState.actionCardId }
         if (card == null) {
             showMissingTarget()
             return
@@ -407,20 +407,20 @@ class DeckSettingViewModel(
 
         viewModelScope.launch(dispatcher) {
             val enabledCard = card.copy(isEnabled = editState.isEnabled)
-            val result = when (editState.selectedCardType) {
-                CardType.Text -> useCases.updateTextCard(
+            val result = when (editState.selectedActionCardType) {
+                ActionCardType.Text -> useCases.updateTextActionCard(
                     card = enabledCard,
                     title = editState.title,
                     text = editState.payload,
                 )
 
-                CardType.Web -> useCases.updateWebCard(
+                ActionCardType.Web -> useCases.updateWebActionCard(
                     card = enabledCard,
                     title = editState.title,
                     rawUrl = editState.payload,
                 )
 
-                CardType.Bluetooth -> useCases.updateBluetoothDeviceCard(
+                ActionCardType.Bluetooth -> useCases.updateBluetoothDeviceActionCard(
                     card = enabledCard,
                     title = editState.title,
                     device = editState.selectedBluetoothDevice,
@@ -431,8 +431,8 @@ class DeckSettingViewModel(
                 is DeckResult.Success -> {
                     _uiState.update {
                         it.copy(
-                            editingCard = null,
-                            message = "카드를 수정했습니다.",
+                            editingActionCard = null,
+                            message = "액션 카드를 수정했습니다.",
                         )
                     }
                 }
@@ -442,26 +442,26 @@ class DeckSettingViewModel(
         }
     }
 
-    fun requestDeleteCard(card: ActionCard) {
+    fun requestDeleteActionCard(card: ActionCard) {
         _uiState.update {
             it.copy(
-                deleteTarget = DeleteTarget.Card(card),
+                deleteTarget = DeleteTarget.ActionCard(card),
                 message = null,
             )
         }
     }
 
-    fun toggleCardEnabled(card: ActionCard) {
+    fun toggleActionCardEnabled(card: ActionCard) {
         viewModelScope.launch(dispatcher) {
-            val updatedCard = useCases.setCardEnabled(
+            val updatedCard = useCases.setActionCardEnabled(
                 card = card,
                 isEnabled = !card.isEnabled,
             )
             showMessage(
                 if (updatedCard.isEnabled) {
-                    "카드를 활성화했습니다."
+                    "액션 카드를 활성화했습니다."
                 } else {
-                    "카드를 비활성화했습니다."
+                    "액션 카드를 비활성화했습니다."
                 },
             )
         }
@@ -484,19 +484,19 @@ class DeckSettingViewModel(
                     _uiState.update {
                         it.copy(
                             selectedCategoryId = if (it.selectedCategoryId == target.category.id) null else it.selectedCategoryId,
-                            cards = if (it.selectedCategoryId == target.category.id) emptyList() else it.cards,
+                            actionCards = if (it.selectedCategoryId == target.category.id) emptyList() else it.actionCards,
                             deleteTarget = null,
                             message = "카테고리를 삭제했습니다.",
                         )
                     }
                 }
 
-                is DeleteTarget.Card -> {
-                    useCases.deleteCard(target.card.id)
+                is DeleteTarget.ActionCard -> {
+                    useCases.deleteActionCard(target.actionCard.id)
                     _uiState.update {
                         it.copy(
                             deleteTarget = null,
-                            message = "카드를 삭제했습니다.",
+                            message = "액션 카드를 삭제했습니다.",
                         )
                     }
                 }
@@ -504,9 +504,9 @@ class DeckSettingViewModel(
         }
     }
 
-    fun executeCard(card: ActionCard) {
+    fun executeActionCard(card: ActionCard) {
         viewModelScope.launch(dispatcher) {
-            when (val feedback = useCases.executeCard(card).toSettingExecutionFeedback()) {
+            when (val feedback = useCases.executeActionCard(card).toSettingExecutionFeedback()) {
                 DeckSettingExecutionFeedback.None -> Unit
                 is DeckSettingExecutionFeedback.Message -> showMessage(feedback.message)
             }
@@ -525,7 +525,7 @@ class DeckSettingViewModel(
         _uiState.update {
             it.copy(
                 editingCategory = null,
-                editingCard = null,
+                editingActionCard = null,
                 deleteTarget = null,
                 message = "대상을 찾지 못했습니다.",
             )

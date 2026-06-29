@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
+import com.example.deckphonephone.deck.domain.ActionCardOperation
 import com.example.deckphonephone.ui.theme.SkyMainAccent
 
 @Composable
@@ -339,18 +339,18 @@ internal fun DeckEmptyCard(
     }
 }
 
-internal fun CardAction.deckLabel(): String {
+internal fun ActionCardOperation.deckLabel(): String {
     return when (this) {
-        is CardAction.CopyText -> "문구"
-        is CardAction.OpenUrl -> "웹사이트"
-        is CardAction.BluetoothDevice -> "블루투스"
+        is ActionCardOperation.CopyText -> "문구"
+        is ActionCardOperation.OpenUrl -> "웹사이트"
+        is ActionCardOperation.BluetoothDevice -> "블루투스"
     }
 }
 
 internal fun ActionCard.hasConnectedBluetoothDevice(
     connectedBluetoothDevices: List<ConnectedBluetoothDevice>,
 ): Boolean {
-    val bluetoothDevice = action as? CardAction.BluetoothDevice ?: return false
+    val bluetoothDevice = operation as? ActionCardOperation.BluetoothDevice ?: return false
     if (!isEnabled) return false
 
     return connectedBluetoothDevices.any { connectedDevice ->

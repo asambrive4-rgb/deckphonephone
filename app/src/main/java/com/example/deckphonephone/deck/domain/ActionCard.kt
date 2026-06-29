@@ -5,6 +5,6 @@ data class ActionCard(
     val categoryId: Long,
     val title: String,
     val description: String = "",
-    val action: CardAction,
+    val operation: ActionCardOperation,
     val isEnabled: Boolean = true,
 )

@@ -1,27 +1,27 @@
 package com.example.deckphonephone.deck.ui
 
-import com.example.deckphonephone.deck.application.ExecuteCardResult
+import com.example.deckphonephone.deck.application.ExecuteActionCardResult
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class DeckExecutionFeedbackTest {
     @Test
     fun `setting feedback keeps opened url silent`() {
-        val feedback = ExecuteCardResult.OpenedUrl.toSettingExecutionFeedback()
+        val feedback = ExecuteActionCardResult.OpenedUrl.toSettingExecutionFeedback()
 
         assertEquals(DeckSettingExecutionFeedback.None, feedback)
     }
 
     @Test
     fun `setting feedback maps copied text to message`() {
-        val feedback = ExecuteCardResult.CopiedText.toSettingExecutionFeedback()
+        val feedback = ExecuteActionCardResult.CopiedText.toSettingExecutionFeedback()
 
         assertEquals(DeckSettingExecutionFeedback.Message("복사했습니다"), feedback)
     }
 
     @Test
     fun `overlay feedback finishes after opening url`() {
-        val feedback = ExecuteCardResult.OpenedUrl.toOverlayExecutionFeedback()
+        val feedback = ExecuteActionCardResult.OpenedUrl.toOverlayExecutionFeedback()
 
         assertEquals(
             DeckOverlayExecutionFeedback(shouldFinish = true),
@@ -31,7 +31,7 @@ class DeckExecutionFeedbackTest {
 
     @Test
     fun `overlay feedback shows transient message and finishes after bluetooth automation starts`() {
-        val feedback = ExecuteCardResult.BluetoothAutomationStarted("Buds").toOverlayExecutionFeedback()
+        val feedback = ExecuteActionCardResult.BluetoothAutomationStarted("Buds").toOverlayExecutionFeedback()
 
         assertEquals(
             DeckOverlayExecutionFeedback(

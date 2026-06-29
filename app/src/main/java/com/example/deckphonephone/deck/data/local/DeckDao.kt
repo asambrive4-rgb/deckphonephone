@@ -12,29 +12,29 @@ interface DeckDao {
     fun observeCategories(): Flow<List<CategoryEntity>>
 
     @Query("SELECT * FROM action_cards WHERE category_id = :categoryId ORDER BY id ASC")
-    fun observeCards(categoryId: Long): Flow<List<ActionCardEntity>>
+    fun observeActionCards(categoryId: Long): Flow<List<ActionCardEntity>>
 
     @Insert
     suspend fun insertCategory(category: CategoryEntity): Long
 
     @Insert
-    suspend fun insertCard(card: ActionCardEntity): Long
+    suspend fun insertActionCard(card: ActionCardEntity): Long
 
     @Update
     suspend fun updateCategory(category: CategoryEntity)
 
     @Update
-    suspend fun updateCard(card: ActionCardEntity)
+    suspend fun updateActionCard(card: ActionCardEntity)
 
     @Query("DELETE FROM categories WHERE id = :id")
     suspend fun deleteCategory(id: Long)
 
     @Query("DELETE FROM action_cards WHERE id = :id")
-    suspend fun deleteCard(id: Long)
+    suspend fun deleteActionCard(id: Long)
 
     @Query("SELECT * FROM categories WHERE id = :id")
     suspend fun getCategory(id: Long): CategoryEntity?
 
     @Query("SELECT * FROM action_cards WHERE id = :id")
-    suspend fun getCard(id: Long): ActionCardEntity?
+    suspend fun getActionCard(id: Long): ActionCardEntity?
 }

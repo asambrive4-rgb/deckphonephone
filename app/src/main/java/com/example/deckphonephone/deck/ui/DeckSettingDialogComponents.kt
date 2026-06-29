@@ -131,13 +131,13 @@ internal fun CategoryEditDialog(
 }
 
 @Composable
-internal fun CardEditDialog(
-    editState: CardEditState,
+internal fun ActionCardEditDialog(
+    editState: ActionCardEditState,
     bluetoothDevices: List<PairedBluetoothDevice>,
     isBluetoothDevicesLoading: Boolean,
     onTitleChanged: (String) -> Unit,
     onPayloadChanged: (String) -> Unit,
-    onCardTypeChanged: (CardType) -> Unit,
+    onActionCardTypeChanged: (ActionCardType) -> Unit,
     onBluetoothDeviceSelected: (PairedBluetoothDevice) -> Unit,
     onEnabledChanged: (Boolean) -> Unit,
     onSave: () -> Unit,
@@ -148,7 +148,7 @@ internal fun CardEditDialog(
         containerColor = MaterialTheme.colorScheme.surface,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         textContentColor = MaterialTheme.colorScheme.onSurface,
-        title = { Text("카드 수정") },
+        title = { Text("액션 카드 수정") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
@@ -158,11 +158,11 @@ internal fun CardEditDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
-                CardTypeChips(
-                    selectedCardType = editState.selectedCardType,
-                    onCardTypeChanged = onCardTypeChanged,
+                ActionCardTypeChips(
+                    selectedActionCardType = editState.selectedActionCardType,
+                    onActionCardTypeChanged = onActionCardTypeChanged,
                 )
-                if (editState.selectedCardType == CardType.Bluetooth) {
+                if (editState.selectedActionCardType == ActionCardType.Bluetooth) {
                     BluetoothDeviceSelector(
                         devices = bluetoothDevices,
                         selectedDevice = editState.selectedBluetoothDevice,
@@ -173,9 +173,9 @@ internal fun CardEditDialog(
                     OutlinedTextField(
                         value = editState.payload,
                         onValueChange = onPayloadChanged,
-                        label = { Text(editState.selectedCardType.payloadLabel()) },
-                        minLines = if (editState.selectedCardType == CardType.Text) 3 else 1,
-                        keyboardOptions = if (editState.selectedCardType == CardType.Web) {
+                        label = { Text(editState.selectedActionCardType.payloadLabel()) },
+                        minLines = if (editState.selectedActionCardType == ActionCardType.Text) 3 else 1,
+                        keyboardOptions = if (editState.selectedActionCardType == ActionCardType.Web) {
                             KeyboardOptions(keyboardType = KeyboardType.Uri)
                         } else {
                             KeyboardOptions.Default
@@ -221,11 +221,11 @@ internal fun DeleteConfirmationDialog(
 ) {
     val targetName = when (target) {
         is DeleteTarget.Category -> target.category.name
-        is DeleteTarget.Card -> target.card.title
+        is DeleteTarget.ActionCard -> target.actionCard.title
     }
     val targetLabel = when (target) {
         is DeleteTarget.Category -> "카테고리"
-        is DeleteTarget.Card -> "카드"
+        is DeleteTarget.ActionCard -> "액션 카드"
     }
 
     AlertDialog(
@@ -259,33 +259,33 @@ internal fun DeleteConfirmationDialog(
 }
 
 @Composable
-internal fun CardTypeChips(
-    selectedCardType: CardType,
-    onCardTypeChanged: (CardType) -> Unit,
+internal fun ActionCardTypeChips(
+    selectedActionCardType: ActionCardType,
+    onActionCardTypeChanged: (ActionCardType) -> Unit,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CardType.entries.forEach { type ->
+        ActionCardType.entries.forEach { type ->
             FilterChip(
-                selected = selectedCardType == type,
-                onClick = { onCardTypeChanged(type) },
+                selected = selectedActionCardType == type,
+                onClick = { onActionCardTypeChanged(type) },
                 label = { Text(type.label()) },
             )
         }
     }
 }
 
-internal fun CardType.label(): String {
+internal fun ActionCardType.label(): String {
     return when (this) {
-        CardType.Text -> "문구"
-        CardType.Web -> "웹"
-        CardType.Bluetooth -> "블루투스"
+        ActionCardType.Text -> "문구"
+        ActionCardType.Web -> "웹"
+        ActionCardType.Bluetooth -> "블루투스"
     }
 }
 
-private fun CardType.payloadLabel(): String {
+private fun ActionCardType.payloadLabel(): String {
     return when (this) {
-        CardType.Text -> "복사할 문구"
-        CardType.Web -> "열 웹페이지 주소"
-        CardType.Bluetooth -> "블루투스 기기"
+        ActionCardType.Text -> "복사할 문구"
+        ActionCardType.Web -> "열 웹페이지 주소"
+        ActionCardType.Bluetooth -> "블루투스 기기"
     }
 }

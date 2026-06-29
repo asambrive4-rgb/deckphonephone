@@ -2,7 +2,7 @@ package com.example.deckphonephone.deck.data.local
 
 import com.example.deckphonephone.deck.application.DeckRepository
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
+import com.example.deckphonephone.deck.domain.ActionCardOperation
 import com.example.deckphonephone.deck.domain.DeckCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,9 +16,9 @@ class RoomDeckRepository(
         }
     }
 
-    override fun observeCards(categoryId: Long): Flow<List<ActionCard>> {
-        return dao.observeCards(categoryId).map { cards ->
-            cards.map { it.toDomain() }
+    override fun observeActionCards(categoryId: Long): Flow<List<ActionCard>> {
+        return dao.observeActionCards(categoryId).map { actionCards ->
+            actionCards.map { it.toDomain() }
         }
     }
 
@@ -39,24 +39,24 @@ class RoomDeckRepository(
         }.toDomain()
     }
 
-    override suspend fun createCard(
+    override suspend fun createActionCard(
         categoryId: Long,
         title: String,
         description: String,
-        action: CardAction,
+        operation: ActionCardOperation,
         isEnabled: Boolean,
     ): ActionCard {
-        val id = dao.insertCard(
-            newCardEntity(
+        val id = dao.insertActionCard(
+            newActionCardEntity(
                 categoryId = categoryId,
                 title = title,
                 description = description,
-                action = action,
+                operation = operation,
                 isEnabled = isEnabled,
             ),
         )
-        return requireNotNull(dao.getCard(id)) {
-            "Inserted card was not found."
+        return requireNotNull(dao.getActionCard(id)) {
+            "Inserted action card was not found."
         }.toDomain()
     }
 
@@ -80,57 +80,57 @@ class RoomDeckRepository(
         dao.deleteCategory(categoryId)
     }
 
-    override suspend fun updateCard(card: ActionCard): ActionCard {
-        val existing = requireNotNull(dao.getCard(card.id)) {
-            "Card was not found: ${card.id}"
+    override suspend fun updateActionCard(card: ActionCard): ActionCard {
+        val existing = requireNotNull(dao.getActionCard(card.id)) {
+            "Action card was not found: ${card.id}"
         }
-        dao.updateCard(
+        dao.updateActionCard(
             card.toUpdatedEntity(existing),
         )
-        return requireNotNull(dao.getCard(card.id)) {
-            "Updated card was not found: ${card.id}"
+        return requireNotNull(dao.getActionCard(card.id)) {
+            "Updated action card was not found: ${card.id}"
         }.toDomain()
     }
 
-    override suspend fun deleteCard(cardId: Long) {
-        dao.deleteCard(cardId)
+    override suspend fun deleteActionCard(actionCardId: Long) {
+        dao.deleteActionCard(actionCardId)
     }
 
     private fun ActionCard.toUpdatedEntity(existing: ActionCardEntity): ActionCardEntity {
-        return when (val action = action) {
-            is CardAction.CopyText -> existing.copy(
+        return when (val operation = operation) {
+            is ActionCardOperation.CopyText -> existing.copy(
                 categoryId = categoryId,
                 title = title,
                 description = description,
-                actionType = ACTION_COPY_TEXT,
-                textValue = action.text,
+                operationType = OPERATION_COPY_TEXT,
+                textValue = operation.text,
                 urlValue = null,
                 bluetoothDeviceName = null,
                 bluetoothDeviceAddress = null,
                 isEnabled = isEnabled,
             )
 
-            is CardAction.OpenUrl -> existing.copy(
+            is ActionCardOperation.OpenUrl -> existing.copy(
                 categoryId = categoryId,
                 title = title,
                 description = description,
-                actionType = ACTION_OPEN_URL,
+                operationType = OPERATION_OPEN_URL,
                 textValue = null,
-                urlValue = action.url,
+                urlValue = operation.url,
                 bluetoothDeviceName = null,
                 bluetoothDeviceAddress = null,
                 isEnabled = isEnabled,
             )
 
-            is CardAction.BluetoothDevice -> existing.copy(
+            is ActionCardOperation.BluetoothDevice -> existing.copy(
                 categoryId = categoryId,
                 title = title,
                 description = description,
-                actionType = ACTION_BLUETOOTH_DEVICE,
+                operationType = OPERATION_BLUETOOTH_DEVICE,
                 textValue = null,
                 urlValue = null,
-                bluetoothDeviceName = action.deviceName,
-                bluetoothDeviceAddress = action.deviceAddress,
+                bluetoothDeviceName = operation.deviceName,
+                bluetoothDeviceAddress = operation.deviceAddress,
                 isEnabled = isEnabled,
             )
         }

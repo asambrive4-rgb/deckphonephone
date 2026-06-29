@@ -66,7 +66,7 @@ fun DeckOverlayScreen(
         onCategorySelected = viewModel::selectCategory,
         onBack = viewModel::goBack,
         onClose = viewModel::close,
-        onCardClicked = viewModel::executeCard,
+        onActionCardClicked = viewModel::executeActionCard,
         onSettingsClicked = onSettingsClicked,
         modifier = modifier,
     )
@@ -79,7 +79,7 @@ private fun DeckOverlayScreenContent(
     onCategorySelected: (Long) -> Unit,
     onBack: () -> Unit,
     onClose: () -> Unit,
-    onCardClicked: (ActionCard) -> Unit,
+    onActionCardClicked: (ActionCard) -> Unit,
     onSettingsClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -133,10 +133,10 @@ private fun DeckOverlayScreenContent(
                         )
                     } else {
                         ActionCardGrid(
-                            cards = uiState.cards,
+                            actionCards = uiState.actionCards,
                             connectedBluetoothDevices = uiState.connectedBluetoothDevices,
                             cardContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            onCardClicked = onCardClicked,
+                            onActionCardClicked = onActionCardClicked,
                             onEmptyClicked = onSettingsClicked,
                         )
                     }
@@ -218,10 +218,10 @@ private fun CategoryGrid(
 
 @Composable
 private fun ActionCardGrid(
-    cards: List<ActionCard>,
+    actionCards: List<ActionCard>,
     connectedBluetoothDevices: List<ConnectedBluetoothDevice>,
     cardContainerColor: Color,
-    onCardClicked: (ActionCard) -> Unit,
+    onActionCardClicked: (ActionCard) -> Unit,
     onEmptyClicked: () -> Unit,
 ) {
     LazyVerticalGrid(
@@ -231,21 +231,21 @@ private fun ActionCardGrid(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.heightIn(max = 474.dp),
     ) {
-        if (cards.isEmpty()) {
+        if (actionCards.isEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 DeckEmptyCard(
-                    text = "+ 카드 추가",
+                    text = "+ 액션 카드 추가",
                     onClick = onEmptyClicked,
                     containerColor = cardContainerColor,
                 )
             }
         }
-        items(cards, key = { it.id }) { card ->
+        items(actionCards, key = { it.id }) { card ->
             OverlayActionCard(
                 card = card,
                 connectedBluetoothDevices = connectedBluetoothDevices,
                 containerColor = cardContainerColor,
-                onClick = onCardClicked,
+                onClick = onActionCardClicked,
             )
         }
     }
@@ -278,9 +278,9 @@ private fun OverlayActionCard(
     onClick: (ActionCard) -> Unit,
 ) {
     val actionLabel = if (card.isEnabled) {
-        card.action.deckLabel()
+        card.operation.deckLabel()
     } else {
-        "비활성 · ${card.action.deckLabel()}"
+        "비활성 · ${card.operation.deckLabel()}"
     }
     val isConnectedBluetoothCard = card.hasConnectedBluetoothDevice(connectedBluetoothDevices)
 

@@ -1,4 +1,4 @@
-# DESIGN_GUIDELINES.md
+ # DESIGN_GUIDELINES.md
 
 DeckDeckDeck Android Native MVP의 화면, 색상, 카드, 상호작용 디자인 기준을 정의한다.
 

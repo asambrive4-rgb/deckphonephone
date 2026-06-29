@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -56,31 +59,31 @@ fun DeckSettingScreen(
     onEditCategory: (DeckCategory) -> Unit,
     onDeleteCategory: (DeckCategory) -> Unit,
     onBack: () -> Unit,
-    onCardTitleChanged: (String) -> Unit,
-    onCardPayloadChanged: (String) -> Unit,
-    onCardTypeChanged: (CardType) -> Unit,
+    onActionCardTitleChanged: (String) -> Unit,
+    onActionCardPayloadChanged: (String) -> Unit,
+    onActionCardTypeChanged: (ActionCardType) -> Unit,
     onBluetoothDeviceSelected: (PairedBluetoothDevice) -> Unit,
-    onCreateCardRequested: () -> Unit,
-    onDismissCreateCard: () -> Unit,
+    onCreateActionCardRequested: () -> Unit,
+    onDismissCreateActionCard: () -> Unit,
     onOpenAppSettings: () -> Unit,
     onDismissAppSettings: () -> Unit,
     onDarkThemeChanged: (Boolean) -> Unit,
     onOverlayRightHandedChanged: (Boolean) -> Unit,
-    onCreateCard: () -> Unit,
-    onCardClicked: (ActionCard) -> Unit,
-    onEditCard: (ActionCard) -> Unit,
-    onToggleCardEnabled: (ActionCard) -> Unit,
-    onDeleteCard: (ActionCard) -> Unit,
+    onCreateActionCard: () -> Unit,
+    onActionCardClicked: (ActionCard) -> Unit,
+    onEditActionCard: (ActionCard) -> Unit,
+    onToggleActionCardEnabled: (ActionCard) -> Unit,
+    onDeleteActionCard: (ActionCard) -> Unit,
     onEditingCategoryNameChanged: (String) -> Unit,
     onSaveCategoryEdit: () -> Unit,
     onDismissCategoryEdit: () -> Unit,
-    onEditingCardTitleChanged: (String) -> Unit,
-    onEditingCardPayloadChanged: (String) -> Unit,
-    onEditingCardTypeChanged: (CardType) -> Unit,
+    onEditingActionCardTitleChanged: (String) -> Unit,
+    onEditingActionCardPayloadChanged: (String) -> Unit,
+    onEditingActionCardTypeChanged: (ActionCardType) -> Unit,
     onEditingBluetoothDeviceSelected: (PairedBluetoothDevice) -> Unit,
-    onEditingCardEnabledChanged: (Boolean) -> Unit,
-    onSaveCardEdit: () -> Unit,
-    onDismissCardEdit: () -> Unit,
+    onEditingActionCardEnabledChanged: (Boolean) -> Unit,
+    onSaveActionCardEdit: () -> Unit,
+    onDismissActionCardEdit: () -> Unit,
     onConfirmDelete: () -> Unit,
     onDismissDelete: () -> Unit,
     modifier: Modifier = Modifier,
@@ -126,9 +129,9 @@ fun DeckSettingScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = if (selectedCategory == null) onCreateCategoryRequested else onCreateCardRequested,
+                onClick = if (selectedCategory == null) onCreateCategoryRequested else onCreateActionCardRequested,
                 icon = { Icon(imageVector = Icons.Filled.Add, contentDescription = null) },
-                text = { Text(if (selectedCategory == null) "카테고리 추가" else "카드 추가") },
+                text = { Text(if (selectedCategory == null) "카테고리 추가" else "액션 카드 추가") },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             )
@@ -145,13 +148,13 @@ fun DeckSettingScreen(
             )
         } else {
             CategoryDetailScreen(
-                cards = uiState.cards,
+                actionCards = uiState.actionCards,
                 connectedBluetoothDevices = uiState.connectedBluetoothDevices,
-                onCreateCardRequested = onCreateCardRequested,
-                onCardClicked = onCardClicked,
-                onEditCard = onEditCard,
-                onToggleCardEnabled = onToggleCardEnabled,
-                onDeleteCard = onDeleteCard,
+                onCreateActionCardRequested = onCreateActionCardRequested,
+                onActionCardClicked = onActionCardClicked,
+                onEditActionCard = onEditActionCard,
+                onToggleActionCardEnabled = onToggleActionCardEnabled,
+                onDeleteActionCard = onDeleteActionCard,
                 modifier = Modifier.padding(innerPadding),
             )
         }
@@ -176,20 +179,20 @@ fun DeckSettingScreen(
         )
     }
 
-    if (uiState.isCreatingCard) {
-        CreateCardSheet(
-            title = uiState.cardTitleInput,
-            payload = uiState.cardPayloadInput,
-            selectedCardType = uiState.selectedCardType,
+    if (uiState.isCreatingActionCard) {
+        CreateActionCardSheet(
+            title = uiState.actionCardTitleInput,
+            payload = uiState.actionCardPayloadInput,
+            selectedActionCardType = uiState.selectedActionCardType,
             bluetoothDevices = uiState.pairedBluetoothDevices,
             selectedBluetoothDevice = uiState.selectedBluetoothDevice,
             isBluetoothDevicesLoading = uiState.isBluetoothDevicesLoading,
-            onTitleChanged = onCardTitleChanged,
-            onPayloadChanged = onCardPayloadChanged,
-            onCardTypeChanged = onCardTypeChanged,
+            onTitleChanged = onActionCardTitleChanged,
+            onPayloadChanged = onActionCardPayloadChanged,
+            onActionCardTypeChanged = onActionCardTypeChanged,
             onBluetoothDeviceSelected = onBluetoothDeviceSelected,
-            onSave = onCreateCard,
-            onDismiss = onDismissCreateCard,
+            onSave = onCreateActionCard,
+            onDismiss = onDismissCreateActionCard,
         )
     }
 
@@ -202,18 +205,18 @@ fun DeckSettingScreen(
         )
     }
 
-    uiState.editingCard?.let { editState ->
-        CardEditDialog(
+    uiState.editingActionCard?.let { editState ->
+        ActionCardEditDialog(
             editState = editState,
             bluetoothDevices = uiState.pairedBluetoothDevices,
             isBluetoothDevicesLoading = uiState.isBluetoothDevicesLoading,
-            onTitleChanged = onEditingCardTitleChanged,
-            onPayloadChanged = onEditingCardPayloadChanged,
-            onCardTypeChanged = onEditingCardTypeChanged,
+            onTitleChanged = onEditingActionCardTitleChanged,
+            onPayloadChanged = onEditingActionCardPayloadChanged,
+            onActionCardTypeChanged = onEditingActionCardTypeChanged,
             onBluetoothDeviceSelected = onEditingBluetoothDeviceSelected,
-            onEnabledChanged = onEditingCardEnabledChanged,
-            onSave = onSaveCardEdit,
-            onDismiss = onDismissCardEdit,
+            onEnabledChanged = onEditingActionCardEnabledChanged,
+            onSave = onSaveActionCardEdit,
+            onDismiss = onDismissActionCardEdit,
         )
     }
 
@@ -263,13 +266,13 @@ private fun HomeScreen(
 
 @Composable
 private fun CategoryDetailScreen(
-    cards: List<ActionCard>,
+    actionCards: List<ActionCard>,
     connectedBluetoothDevices: List<ConnectedBluetoothDevice>,
-    onCreateCardRequested: () -> Unit,
-    onCardClicked: (ActionCard) -> Unit,
-    onEditCard: (ActionCard) -> Unit,
-    onToggleCardEnabled: (ActionCard) -> Unit,
-    onDeleteCard: (ActionCard) -> Unit,
+    onCreateActionCardRequested: () -> Unit,
+    onActionCardClicked: (ActionCard) -> Unit,
+    onEditActionCard: (ActionCard) -> Unit,
+    onToggleActionCardEnabled: (ActionCard) -> Unit,
+    onDeleteActionCard: (ActionCard) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyVerticalGrid(
@@ -279,22 +282,22 @@ private fun CategoryDetailScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier.fillMaxSize(),
     ) {
-        if (cards.isEmpty()) {
+        if (actionCards.isEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 DeckEmptyCard(
-                    text = "+ 카드 추가",
-                    onClick = onCreateCardRequested,
+                    text = "+ 액션 카드 추가",
+                    onClick = onCreateActionCardRequested,
                 )
             }
         }
-        items(cards, key = { it.id }) { card ->
+        items(actionCards, key = { it.id }) { card ->
             ActionCardView(
                 card = card,
                 connectedBluetoothDevices = connectedBluetoothDevices,
-                onClick = onCardClicked,
-                onEdit = { onEditCard(card) },
-                onToggleEnabled = { onToggleCardEnabled(card) },
-                onDelete = { onDeleteCard(card) },
+                onClick = onActionCardClicked,
+                onEdit = { onEditActionCard(card) },
+                onToggleEnabled = { onToggleActionCardEnabled(card) },
+                onDelete = { onDeleteActionCard(card) },
             )
         }
     }
@@ -309,12 +312,14 @@ private fun CreateCategorySheet(
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
+        modifier = Modifier.imePadding(),
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -345,32 +350,34 @@ private fun CreateCategorySheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CreateCardSheet(
+private fun CreateActionCardSheet(
     title: String,
     payload: String,
-    selectedCardType: CardType,
+    selectedActionCardType: ActionCardType,
     bluetoothDevices: List<PairedBluetoothDevice>,
     selectedBluetoothDevice: PairedBluetoothDevice?,
     isBluetoothDevicesLoading: Boolean,
     onTitleChanged: (String) -> Unit,
     onPayloadChanged: (String) -> Unit,
-    onCardTypeChanged: (CardType) -> Unit,
+    onActionCardTypeChanged: (ActionCardType) -> Unit,
     onBluetoothDeviceSelected: (PairedBluetoothDevice) -> Unit,
     onSave: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
+        modifier = Modifier.imePadding(),
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surface,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "카드 추가",
+                text = "액션 카드 추가",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -381,11 +388,11 @@ private fun CreateCardSheet(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
-            CardTypeChips(
-                selectedCardType = selectedCardType,
-                onCardTypeChanged = onCardTypeChanged,
+            ActionCardTypeChips(
+                selectedActionCardType = selectedActionCardType,
+                onActionCardTypeChanged = onActionCardTypeChanged,
             )
-            if (selectedCardType == CardType.Bluetooth) {
+            if (selectedActionCardType == ActionCardType.Bluetooth) {
                 BluetoothDeviceSelector(
                     devices = bluetoothDevices,
                     selectedDevice = selectedBluetoothDevice,
@@ -396,9 +403,9 @@ private fun CreateCardSheet(
                 OutlinedTextField(
                     value = payload,
                     onValueChange = onPayloadChanged,
-                    label = { Text(selectedCardType.payloadLabel()) },
-                    minLines = if (selectedCardType == CardType.Text) 3 else 1,
-                    keyboardOptions = if (selectedCardType == CardType.Web) {
+                    label = { Text(selectedActionCardType.payloadLabel()) },
+                    minLines = if (selectedActionCardType == ActionCardType.Text) 3 else 1,
+                    keyboardOptions = if (selectedActionCardType == ActionCardType.Web) {
                         KeyboardOptions(keyboardType = KeyboardType.Uri)
                     } else {
                         KeyboardOptions.Default
@@ -412,17 +419,17 @@ private fun CreateCardSheet(
                     .fillMaxWidth()
                     .heightIn(min = 48.dp),
             ) {
-                Text("카드 추가")
+                Text("액션 카드 추가")
             }
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
 
-private fun CardType.payloadLabel(): String {
+private fun ActionCardType.payloadLabel(): String {
     return when (this) {
-        CardType.Text -> "복사할 문구"
-        CardType.Web -> "열 웹페이지 주소"
-        CardType.Bluetooth -> "블루투스 기기"
+        ActionCardType.Text -> "복사할 문구"
+        ActionCardType.Web -> "열 웹페이지 주소"
+        ActionCardType.Bluetooth -> "블루투스 기기"
     }
 }

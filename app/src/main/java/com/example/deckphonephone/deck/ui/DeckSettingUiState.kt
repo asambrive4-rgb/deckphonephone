@@ -10,23 +10,23 @@ data class DeckSettingUiState(
     val categories: List<DeckCategory> = emptyList(),
     val isCategoriesLoading: Boolean = true,
     val selectedCategoryId: Long? = null,
-    val cards: List<ActionCard> = emptyList(),
-    val isCardsLoading: Boolean = false,
+    val actionCards: List<ActionCard> = emptyList(),
+    val isActionCardsLoading: Boolean = false,
     val categoryNameInput: String = "",
     val isCreatingCategory: Boolean = false,
-    val cardTitleInput: String = "",
-    val cardPayloadInput: String = "",
-    val selectedCardType: CardType = CardType.Text,
+    val actionCardTitleInput: String = "",
+    val actionCardPayloadInput: String = "",
+    val selectedActionCardType: ActionCardType = ActionCardType.Text,
     val selectedBluetoothDevice: PairedBluetoothDevice? = null,
     val pairedBluetoothDevices: List<PairedBluetoothDevice> = emptyList(),
     val connectedBluetoothDevices: List<ConnectedBluetoothDevice> = emptyList(),
     val isBluetoothDevicesLoading: Boolean = false,
-    val isCreatingCard: Boolean = false,
+    val isCreatingActionCard: Boolean = false,
     val isDarkTheme: Boolean = false,
     val overlayHandPreference: OverlayHandPreference = OverlayHandPreference.Right,
     val isAppSettingsOpen: Boolean = false,
     val editingCategory: CategoryEditState? = null,
-    val editingCard: CardEditState? = null,
+    val editingActionCard: ActionCardEditState? = null,
     val deleteTarget: DeleteTarget? = null,
     val message: String? = null,
 )
@@ -36,16 +36,16 @@ data class CategoryEditState(
     val name: String,
 )
 
-data class CardEditState(
-    val cardId: Long,
+data class ActionCardEditState(
+    val actionCardId: Long,
     val title: String,
     val payload: String,
-    val selectedCardType: CardType,
+    val selectedActionCardType: ActionCardType,
     val selectedBluetoothDevice: PairedBluetoothDevice?,
     val isEnabled: Boolean,
 )
 
-enum class CardType {
+enum class ActionCardType {
     Text,
     Web,
     Bluetooth,
@@ -53,5 +53,7 @@ enum class CardType {
 
 sealed interface DeleteTarget {
     data class Category(val category: DeckCategory) : DeleteTarget
-    data class Card(val card: ActionCard) : DeleteTarget
+    data class ActionCard(
+        val actionCard: com.example.deckphonephone.deck.domain.ActionCard,
+    ) : DeleteTarget
 }

@@ -86,9 +86,9 @@ internal fun ActionCardView(
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     val actionLabel = if (card.isEnabled) {
-        card.action.deckLabel()
+        card.operation.deckLabel()
     } else {
-        "비활성 · ${card.action.deckLabel()}"
+        "비활성 · ${card.operation.deckLabel()}"
     }
     val isConnectedBluetoothCard = card.hasConnectedBluetoothDevice(connectedBluetoothDevices)
 
@@ -114,7 +114,7 @@ internal fun ActionCardView(
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = "카드 메뉴",
+                        contentDescription = "액션 카드 메뉴",
                     )
                 }
                 DropdownMenu(

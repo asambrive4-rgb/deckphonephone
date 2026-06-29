@@ -6,17 +6,17 @@ import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
 import com.example.deckphonephone.deck.application.ConnectedBluetoothDevicesPort
 import com.example.deckphonephone.deck.application.CopyTextPort
 import com.example.deckphonephone.deck.application.CopyTextResult
-import com.example.deckphonephone.deck.application.CreateBluetoothDeviceCardUseCase
+import com.example.deckphonephone.deck.application.CreateBluetoothDeviceActionCardUseCase
 import com.example.deckphonephone.deck.application.CreateCategoryUseCase
-import com.example.deckphonephone.deck.application.CreateTextCardUseCase
-import com.example.deckphonephone.deck.application.CreateWebCardUseCase
+import com.example.deckphonephone.deck.application.CreateTextActionCardUseCase
+import com.example.deckphonephone.deck.application.CreateWebActionCardUseCase
 import com.example.deckphonephone.deck.application.DeckRepository
 import com.example.deckphonephone.deck.application.DeckUseCases
-import com.example.deckphonephone.deck.application.DeleteCardUseCase
+import com.example.deckphonephone.deck.application.DeleteActionCardUseCase
 import com.example.deckphonephone.deck.application.DeleteCategoryUseCase
-import com.example.deckphonephone.deck.application.ExecuteCardUseCase
+import com.example.deckphonephone.deck.application.ExecuteActionCardUseCase
 import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUseCase
-import com.example.deckphonephone.deck.application.ObserveCardsUseCase
+import com.example.deckphonephone.deck.application.ObserveActionCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
 import com.example.deckphonephone.deck.application.ObserveConnectedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
@@ -27,16 +27,16 @@ import com.example.deckphonephone.deck.application.OpenUrlResult
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.application.PairedBluetoothDevicesPort
 import com.example.deckphonephone.deck.application.PairedBluetoothDevicesResult
-import com.example.deckphonephone.deck.application.SetCardEnabledUseCase
+import com.example.deckphonephone.deck.application.SetActionCardEnabledUseCase
 import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
 import com.example.deckphonephone.deck.application.SetOverlayHandPreferenceUseCase
 import com.example.deckphonephone.deck.application.AppPreferenceRepository
-import com.example.deckphonephone.deck.application.UpdateBluetoothDeviceCardUseCase
+import com.example.deckphonephone.deck.application.UpdateBluetoothDeviceActionCardUseCase
 import com.example.deckphonephone.deck.application.UpdateCategoryUseCase
-import com.example.deckphonephone.deck.application.UpdateTextCardUseCase
-import com.example.deckphonephone.deck.application.UpdateWebCardUseCase
+import com.example.deckphonephone.deck.application.UpdateTextActionCardUseCase
+import com.example.deckphonephone.deck.application.UpdateWebActionCardUseCase
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
+import com.example.deckphonephone.deck.domain.ActionCardOperation
 import com.example.deckphonephone.deck.domain.DeckCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -100,15 +100,15 @@ class DeckSettingViewModelTest {
             dispatcher = Dispatchers.Unconfined,
         )
         viewModel.selectCategory(1L)
-        viewModel.requestCreateCard()
-        viewModel.onCardTitleChanged("복사 슬롯")
-        viewModel.onCardPayloadChanged("hello")
+        viewModel.requestCreateActionCard()
+        viewModel.onActionCardTitleChanged("복사 슬롯")
+        viewModel.onActionCardPayloadChanged("hello")
 
-        viewModel.createCard()
+        viewModel.createActionCard()
 
-        assertEquals(false, viewModel.uiState.value.isCreatingCard)
-        assertEquals("", viewModel.uiState.value.cardTitleInput)
-        assertEquals("", viewModel.uiState.value.cardPayloadInput)
+        assertEquals(false, viewModel.uiState.value.isCreatingActionCard)
+        assertEquals("", viewModel.uiState.value.actionCardTitleInput)
+        assertEquals("", viewModel.uiState.value.actionCardPayloadInput)
     }
 
     @Test
@@ -119,11 +119,11 @@ class DeckSettingViewModelTest {
             dispatcher = Dispatchers.Unconfined,
         )
         viewModel.selectCategory(1L)
-        viewModel.requestCreateCard()
+        viewModel.requestCreateActionCard()
 
-        viewModel.createCard()
+        viewModel.createActionCard()
 
-        assertEquals(true, viewModel.uiState.value.isCreatingCard)
+        assertEquals(true, viewModel.uiState.value.isCreatingActionCard)
         assertEquals("슬롯 이름을 입력해 주세요.", viewModel.uiState.value.message)
     }
 
@@ -137,10 +137,10 @@ class DeckSettingViewModelTest {
             id = 1L,
             categoryId = 1L,
             title = "복사 슬롯",
-            action = CardAction.CopyText("hello"),
+            operation = ActionCardOperation.CopyText("hello"),
         )
 
-        viewModel.executeCard(card)
+        viewModel.executeActionCard(card)
 
         assertEquals("복사했습니다", viewModel.uiState.value.message)
     }
@@ -155,13 +155,13 @@ class DeckSettingViewModelTest {
             id = 1L,
             categoryId = 1L,
             title = "비활성 슬롯",
-            action = CardAction.CopyText("hello"),
+            operation = ActionCardOperation.CopyText("hello"),
             isEnabled = false,
         )
 
-        viewModel.executeCard(card)
+        viewModel.executeActionCard(card)
 
-        assertEquals("비활성화된 카드입니다.", viewModel.uiState.value.message)
+        assertEquals("비활성화된 액션 카드입니다.", viewModel.uiState.value.message)
     }
 
     @Test
@@ -175,7 +175,7 @@ class DeckSettingViewModelTest {
         viewModel.onBluetoothDeviceSelected(device)
 
         assertEquals(device, viewModel.uiState.value.selectedBluetoothDevice)
-        assertEquals("Buds", viewModel.uiState.value.cardTitleInput)
+        assertEquals("Buds", viewModel.uiState.value.actionCardTitleInput)
     }
 
     @Test
@@ -265,13 +265,13 @@ private class FakeSettingDeckRepository : DeckRepository {
             ),
         ),
     )
-    private val cards = MutableStateFlow<List<ActionCard>>(emptyList())
+    private val actionCards = MutableStateFlow<List<ActionCard>>(emptyList())
     private var nextCategoryId = 2L
-    private var nextCardId = 1L
+    private var nextActionCardId = 1L
 
     override fun observeCategories(): Flow<List<DeckCategory>> = categories
 
-    override fun observeCards(categoryId: Long): Flow<List<ActionCard>> = cards
+    override fun observeActionCards(categoryId: Long): Flow<List<ActionCard>> = actionCards
 
     override suspend fun createCategory(
         name: String,
@@ -288,22 +288,22 @@ private class FakeSettingDeckRepository : DeckRepository {
         return category
     }
 
-    override suspend fun createCard(
+    override suspend fun createActionCard(
         categoryId: Long,
         title: String,
         description: String,
-        action: CardAction,
+        operation: ActionCardOperation,
         isEnabled: Boolean,
     ): ActionCard {
         val card = ActionCard(
-            id = nextCardId++,
+            id = nextActionCardId++,
             categoryId = categoryId,
             title = title,
             description = description,
-            action = action,
+            operation = operation,
             isEnabled = isEnabled,
         )
-        cards.value = cards.value + card
+        actionCards.value = actionCards.value + card
         return card
     }
 
@@ -311,9 +311,9 @@ private class FakeSettingDeckRepository : DeckRepository {
 
     override suspend fun deleteCategory(categoryId: Long) = Unit
 
-    override suspend fun updateCard(card: ActionCard): ActionCard = card
+    override suspend fun updateActionCard(card: ActionCard): ActionCard = card
 
-    override suspend fun deleteCard(cardId: Long) = Unit
+    override suspend fun deleteActionCard(actionCardId: Long) = Unit
 }
 
 private class FakeSettingAppPreferenceRepository : AppPreferenceRepository {
@@ -341,20 +341,20 @@ private fun DeckRepository.toUseCases(
         observeCategories = ObserveCategoriesUseCase(this),
         updateCategory = UpdateCategoryUseCase(this),
         deleteCategory = DeleteCategoryUseCase(this),
-        createTextCard = CreateTextCardUseCase(this),
-        createWebCard = CreateWebCardUseCase(this),
-        createBluetoothDeviceCard = CreateBluetoothDeviceCardUseCase(this),
+        createTextActionCard = CreateTextActionCardUseCase(this),
+        createWebActionCard = CreateWebActionCardUseCase(this),
+        createBluetoothDeviceActionCard = CreateBluetoothDeviceActionCardUseCase(this),
         listPairedBluetoothDevices = ListPairedBluetoothDevicesUseCase(EmptySettingPairedBluetoothDevicesPort),
         observeConnectedBluetoothDevices = ObserveConnectedBluetoothDevicesUseCase(
             FakeSettingConnectedBluetoothDevicesPort(connectedDevicesFlow),
         ),
-        observeCards = ObserveCardsUseCase(this),
-        updateTextCard = UpdateTextCardUseCase(this),
-        updateWebCard = UpdateWebCardUseCase(this),
-        updateBluetoothDeviceCard = UpdateBluetoothDeviceCardUseCase(this),
-        deleteCard = DeleteCardUseCase(this),
-        setCardEnabled = SetCardEnabledUseCase(this),
-        executeCard = ExecuteCardUseCase(
+        observeActionCards = ObserveActionCardsUseCase(this),
+        updateTextActionCard = UpdateTextActionCardUseCase(this),
+        updateWebActionCard = UpdateWebActionCardUseCase(this),
+        updateBluetoothDeviceActionCard = UpdateBluetoothDeviceActionCardUseCase(this),
+        deleteActionCard = DeleteActionCardUseCase(this),
+        setActionCardEnabled = SetActionCardEnabledUseCase(this),
+        executeActionCard = ExecuteActionCardUseCase(
             openUrlPort = AlwaysSuccessfulSettingOpenUrlPort,
             copyTextPort = AlwaysSuccessfulSettingCopyTextPort,
             bluetoothDeviceActionPort = AlwaysSuccessfulSettingBluetoothDeviceActionPort,

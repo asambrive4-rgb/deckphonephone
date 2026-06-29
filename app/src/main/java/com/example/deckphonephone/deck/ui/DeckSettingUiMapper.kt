@@ -3,15 +3,15 @@ package com.example.deckphonephone.deck.ui
 import com.example.deckphonephone.deck.application.DeckError
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
-import com.example.deckphonephone.deck.domain.CardAction
+import com.example.deckphonephone.deck.domain.ActionCardOperation
 
-internal fun ActionCard.toCardEditState(): CardEditState {
-    return CardEditState(
-        cardId = id,
+internal fun ActionCard.toActionCardEditState(): ActionCardEditState {
+    return ActionCardEditState(
+        actionCardId = id,
         title = title,
-        payload = action.toCardPayload(),
-        selectedCardType = action.toCardType(),
-        selectedBluetoothDevice = action.toPairedBluetoothDevice(),
+        payload = operation.toCardPayload(),
+        selectedActionCardType = operation.toActionCardType(),
+        selectedBluetoothDevice = operation.toPairedBluetoothDevice(),
         isEnabled = isEnabled,
     )
 }
@@ -19,7 +19,7 @@ internal fun ActionCard.toCardEditState(): CardEditState {
 internal fun DeckError.toDeckSettingMessage(): String {
     return when (this) {
         DeckError.CategoryNameBlank -> "카테고리 이름을 입력해 주세요."
-        DeckError.CardTitleBlank -> "슬롯 이름을 입력해 주세요."
+        DeckError.ActionCardTitleBlank -> "슬롯 이름을 입력해 주세요."
         DeckError.TextBlank -> "복사할 문구를 입력해 주세요."
         DeckError.UrlBlank -> "열 웹페이지 주소를 입력해 주세요."
         DeckError.InvalidUrl -> "웹 주소 형식이 올바르지 않습니다."
@@ -29,30 +29,30 @@ internal fun DeckError.toDeckSettingMessage(): String {
     }
 }
 
-private fun CardAction.toCardPayload(): String {
+private fun ActionCardOperation.toCardPayload(): String {
     return when (this) {
-        is CardAction.CopyText -> text
-        is CardAction.OpenUrl -> url
-        is CardAction.BluetoothDevice -> deviceAddress
+        is ActionCardOperation.CopyText -> text
+        is ActionCardOperation.OpenUrl -> url
+        is ActionCardOperation.BluetoothDevice -> deviceAddress
     }
 }
 
-private fun CardAction.toCardType(): CardType {
+private fun ActionCardOperation.toActionCardType(): ActionCardType {
     return when (this) {
-        is CardAction.CopyText -> CardType.Text
-        is CardAction.OpenUrl -> CardType.Web
-        is CardAction.BluetoothDevice -> CardType.Bluetooth
+        is ActionCardOperation.CopyText -> ActionCardType.Text
+        is ActionCardOperation.OpenUrl -> ActionCardType.Web
+        is ActionCardOperation.BluetoothDevice -> ActionCardType.Bluetooth
     }
 }
 
-private fun CardAction.toPairedBluetoothDevice(): PairedBluetoothDevice? {
+private fun ActionCardOperation.toPairedBluetoothDevice(): PairedBluetoothDevice? {
     return when (this) {
-        is CardAction.BluetoothDevice -> PairedBluetoothDevice(
+        is ActionCardOperation.BluetoothDevice -> PairedBluetoothDevice(
             name = deviceName,
             address = deviceAddress,
         )
 
-        is CardAction.CopyText,
-        is CardAction.OpenUrl -> null
+        is ActionCardOperation.CopyText,
+        is ActionCardOperation.OpenUrl -> null
     }
 }
