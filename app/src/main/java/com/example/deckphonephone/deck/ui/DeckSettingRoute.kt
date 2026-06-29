@@ -99,6 +99,7 @@ fun DeckSettingRoute(
         onOpenAppSettings = viewModel::requestAppSettings,
         onDismissAppSettings = viewModel::dismissAppSettings,
         onDarkThemeChanged = viewModel::setDarkTheme,
+        onColorThemeChanged = viewModel::setColorTheme,
         onOverlayRightHandedChanged = viewModel::setOverlayRightHanded,
         onCreateActionCard = viewModel::createActionCard,
         onActionCardClicked = viewModel::executeActionCard,

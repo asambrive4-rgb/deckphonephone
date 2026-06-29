@@ -2,7 +2,6 @@ package com.example.deckphonephone
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -16,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.deckphonephone.deck.application.DeckSettingsExit
 import com.example.deckphonephone.deck.application.DeckSurface
@@ -27,6 +27,7 @@ import com.example.deckphonephone.deck.ui.DeckOverlayPermissionScreen
 import com.example.deckphonephone.deck.ui.DeckSettingRoute
 import com.example.deckphonephone.deck.ui.DeckSettingViewModel
 import com.example.deckphonephone.ui.theme.DeckphonephoneTheme
+import com.example.deckphonephone.ui.theme.systemBarSurfaceColor
 
 class DeckEntryPointRouter : ComponentActivity() {
     private val appContainer by lazy {
@@ -81,10 +82,20 @@ class DeckEntryPointRouter : ComponentActivity() {
         currentSurface = DeckSurface.Settings
         setContent {
             val isDarkTheme by appContainer.useCases.observeDarkTheme().collectAsState()
-            LaunchedEffect(isDarkTheme) {
-                enableEdgeToEdgeForTheme(isDarkTheme)
+            val colorTheme by appContainer.useCases.observeColorTheme().collectAsState()
+            LaunchedEffect(isDarkTheme, colorTheme) {
+                enableEdgeToEdgeForTheme(
+                    isDarkTheme = isDarkTheme,
+                    surfaceColor = systemBarSurfaceColor(
+                        darkTheme = isDarkTheme,
+                        colorTheme = colorTheme,
+                    ).toArgb(),
+                )
             }
-            DeckphonephoneTheme(darkTheme = isDarkTheme) {
+            DeckphonephoneTheme(
+                darkTheme = isDarkTheme,
+                colorTheme = colorTheme,
+            ) {
                 val viewModel = viewModel<DeckSettingViewModel>(
                     factory = DeckSettingViewModel.Factory(appContainer.useCases),
                 )
@@ -125,10 +136,20 @@ class DeckEntryPointRouter : ComponentActivity() {
         currentSurface = null
         setContent {
             val isDarkTheme by appContainer.useCases.observeDarkTheme().collectAsState()
-            LaunchedEffect(isDarkTheme) {
-                enableEdgeToEdgeForTheme(isDarkTheme)
+            val colorTheme by appContainer.useCases.observeColorTheme().collectAsState()
+            LaunchedEffect(isDarkTheme, colorTheme) {
+                enableEdgeToEdgeForTheme(
+                    isDarkTheme = isDarkTheme,
+                    surfaceColor = systemBarSurfaceColor(
+                        darkTheme = isDarkTheme,
+                        colorTheme = colorTheme,
+                    ).toArgb(),
+                )
             }
-            DeckphonephoneTheme(darkTheme = isDarkTheme) {
+            DeckphonephoneTheme(
+                darkTheme = isDarkTheme,
+                colorTheme = colorTheme,
+            ) {
                 DeckOverlayPermissionScreen(
                     onOpenPermissionSettings = ::openOverlayPermissionSettings,
                     onClose = ::closeRouterTask,
@@ -151,16 +172,19 @@ class DeckEntryPointRouter : ComponentActivity() {
         }
     }
 
-    private fun enableEdgeToEdgeForTheme(isDarkTheme: Boolean) {
+    private fun enableEdgeToEdgeForTheme(
+        isDarkTheme: Boolean,
+        surfaceColor: Int,
+    ) {
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(
-                lightScrim = Color.TRANSPARENT,
-                darkScrim = Color.TRANSPARENT,
+                lightScrim = surfaceColor,
+                darkScrim = surfaceColor,
                 detectDarkMode = { isDarkTheme },
             ),
             navigationBarStyle = SystemBarStyle.auto(
-                lightScrim = Color.TRANSPARENT,
-                darkScrim = Color.TRANSPARENT,
+                lightScrim = surfaceColor,
+                darkScrim = surfaceColor,
                 detectDarkMode = { isDarkTheme },
             ),
         )

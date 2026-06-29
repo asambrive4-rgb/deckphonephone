@@ -103,7 +103,11 @@ class DeckOverlayService : LifecycleService(), SavedStateRegistryOwner {
             setViewTreeSavedStateRegistryOwner(this@DeckOverlayService)
             setContent {
                 val isDarkTheme by appContainer.useCases.observeDarkTheme().collectAsState()
-                DeckphonephoneTheme(darkTheme = isDarkTheme) {
+                val colorTheme by appContainer.useCases.observeColorTheme().collectAsState()
+                DeckphonephoneTheme(
+                    darkTheme = isDarkTheme,
+                    colorTheme = colorTheme,
+                ) {
                     DeckOverlayScreen(
                         viewModel = viewModel,
                         onSettingsClicked = ::openSettings,

@@ -10,6 +10,7 @@ import com.example.deckphonephone.deck.application.CreateBluetoothDeviceActionCa
 import com.example.deckphonephone.deck.application.CreateCategoryUseCase
 import com.example.deckphonephone.deck.application.CreateTextActionCardUseCase
 import com.example.deckphonephone.deck.application.CreateWebActionCardUseCase
+import com.example.deckphonephone.deck.application.DeckColorTheme
 import com.example.deckphonephone.deck.application.DeckRepository
 import com.example.deckphonephone.deck.application.DeckUseCases
 import com.example.deckphonephone.deck.application.DeleteActionCardUseCase
@@ -18,6 +19,7 @@ import com.example.deckphonephone.deck.application.ExecuteActionCardUseCase
 import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveActionCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
+import com.example.deckphonephone.deck.application.ObserveColorThemeUseCase
 import com.example.deckphonephone.deck.application.ObserveConnectedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
 import com.example.deckphonephone.deck.application.ObserveOverlayHandPreferenceUseCase
@@ -28,6 +30,7 @@ import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.application.PairedBluetoothDevicesPort
 import com.example.deckphonephone.deck.application.PairedBluetoothDevicesResult
 import com.example.deckphonephone.deck.application.SetActionCardEnabledUseCase
+import com.example.deckphonephone.deck.application.SetColorThemeUseCase
 import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
 import com.example.deckphonephone.deck.application.SetOverlayHandPreferenceUseCase
 import com.example.deckphonephone.deck.application.AppPreferenceRepository
@@ -208,6 +211,19 @@ class DeckSettingViewModelTest {
     }
 
     @Test
+    fun `changing color theme updates theme state`() {
+        val appPreferenceRepository = FakeSettingAppPreferenceRepository()
+        val viewModel = DeckSettingViewModel(
+            useCases = FakeSettingDeckRepository().toUseCases(appPreferenceRepository),
+            dispatcher = Dispatchers.Unconfined,
+        )
+
+        viewModel.setColorTheme(DeckColorTheme.Apricot)
+
+        assertEquals(DeckColorTheme.Apricot, viewModel.uiState.value.colorTheme)
+    }
+
+    @Test
     fun `changing overlay hand preference updates hand state`() {
         val appPreferenceRepository = FakeSettingAppPreferenceRepository()
         val viewModel = DeckSettingViewModel(
@@ -318,13 +334,19 @@ private class FakeSettingDeckRepository : DeckRepository {
 
 private class FakeSettingAppPreferenceRepository : AppPreferenceRepository {
     private val darkTheme = MutableStateFlow(false)
+    private val theme = MutableStateFlow(DeckColorTheme.Sky)
     private val handPreference = MutableStateFlow(OverlayHandPreference.Right)
 
     override val isDarkTheme: StateFlow<Boolean> = darkTheme
+    override val colorTheme: StateFlow<DeckColorTheme> = theme
     override val overlayHandPreference: StateFlow<OverlayHandPreference> = handPreference
 
     override suspend fun setDarkTheme(isDarkTheme: Boolean) {
         darkTheme.value = isDarkTheme
+    }
+
+    override suspend fun setColorTheme(colorTheme: DeckColorTheme) {
+        theme.value = colorTheme
     }
 
     override suspend fun setOverlayHandPreference(overlayHandPreference: OverlayHandPreference) {
@@ -361,6 +383,8 @@ private fun DeckRepository.toUseCases(
         ),
         observeDarkTheme = ObserveDarkThemeUseCase(appPreferenceRepository),
         setDarkTheme = SetDarkThemeUseCase(appPreferenceRepository),
+        observeColorTheme = ObserveColorThemeUseCase(appPreferenceRepository),
+        setColorTheme = SetColorThemeUseCase(appPreferenceRepository),
         observeOverlayHandPreference = ObserveOverlayHandPreferenceUseCase(appPreferenceRepository),
         setOverlayHandPreference = SetOverlayHandPreferenceUseCase(appPreferenceRepository),
     )

@@ -3,6 +3,7 @@
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.deckphonephone.deck.application.AppPreferenceRepository
+import com.example.deckphonephone.deck.application.DeckColorTheme
 import com.example.deckphonephone.deck.application.OverlayHandPreference
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +17,9 @@ class SharedPreferencesAppPreferenceRepository(
         Context.MODE_PRIVATE,
     )
     private val _isDarkTheme = MutableStateFlow(preferences.getBoolean(KEY_DARK_THEME, false))
+    private val _colorTheme = MutableStateFlow(
+        preferences.getString(KEY_COLOR_THEME, null).toDeckColorTheme(),
+    )
     private val _overlayHandPreference = MutableStateFlow(
         preferences.getString(KEY_OVERLAY_HAND_PREFERENCE, null).toOverlayHandPreference(),
     )
@@ -23,6 +27,12 @@ class SharedPreferencesAppPreferenceRepository(
         when (key) {
             KEY_DARK_THEME -> {
                 _isDarkTheme.value = preferences.getBoolean(KEY_DARK_THEME, false)
+            }
+
+            KEY_COLOR_THEME -> {
+                _colorTheme.value = preferences
+                    .getString(KEY_COLOR_THEME, null)
+                    .toDeckColorTheme()
             }
 
             KEY_OVERLAY_HAND_PREFERENCE -> {
@@ -34,6 +44,7 @@ class SharedPreferencesAppPreferenceRepository(
     }
 
     override val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
+    override val colorTheme: StateFlow<DeckColorTheme> = _colorTheme.asStateFlow()
     override val overlayHandPreference: StateFlow<OverlayHandPreference> = _overlayHandPreference.asStateFlow()
 
     init {
@@ -44,6 +55,13 @@ class SharedPreferencesAppPreferenceRepository(
         _isDarkTheme.value = isDarkTheme
         preferences.edit()
             .putBoolean(KEY_DARK_THEME, isDarkTheme)
+            .apply()
+    }
+
+    override suspend fun setColorTheme(colorTheme: DeckColorTheme) {
+        _colorTheme.value = colorTheme
+        preferences.edit()
+            .putString(KEY_COLOR_THEME, colorTheme.toPreferenceValue())
             .apply()
     }
 
@@ -62,6 +80,25 @@ class SharedPreferencesAppPreferenceRepository(
         }
     }
 
+    private fun String?.toDeckColorTheme(): DeckColorTheme {
+        return when (this) {
+            VALUE_COLOR_APRICOT -> DeckColorTheme.Apricot
+            VALUE_COLOR_MINT -> DeckColorTheme.Mint
+            VALUE_COLOR_LAVENDER -> DeckColorTheme.Lavender
+            VALUE_COLOR_SKY -> DeckColorTheme.Sky
+            else -> DeckColorTheme.Sky
+        }
+    }
+
+    private fun DeckColorTheme.toPreferenceValue(): String {
+        return when (this) {
+            DeckColorTheme.Sky -> VALUE_COLOR_SKY
+            DeckColorTheme.Apricot -> VALUE_COLOR_APRICOT
+            DeckColorTheme.Mint -> VALUE_COLOR_MINT
+            DeckColorTheme.Lavender -> VALUE_COLOR_LAVENDER
+        }
+    }
+
     private fun OverlayHandPreference.toPreferenceValue(): String {
         return when (this) {
             OverlayHandPreference.Left -> VALUE_LEFT_HAND
@@ -72,7 +109,12 @@ class SharedPreferencesAppPreferenceRepository(
     private companion object {
         const val PREFERENCES_NAME = "deck_preferences"
         const val KEY_DARK_THEME = "dark_theme"
+        const val KEY_COLOR_THEME = "color_theme"
         const val KEY_OVERLAY_HAND_PREFERENCE = "overlay_hand_preference"
+        const val VALUE_COLOR_SKY = "sky"
+        const val VALUE_COLOR_APRICOT = "apricot"
+        const val VALUE_COLOR_MINT = "mint"
+        const val VALUE_COLOR_LAVENDER = "lavender"
         const val VALUE_LEFT_HAND = "left"
         const val VALUE_RIGHT_HAND = "right"
     }

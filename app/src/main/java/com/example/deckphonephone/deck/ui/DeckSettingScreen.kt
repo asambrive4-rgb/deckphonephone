@@ -41,6 +41,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
+import com.example.deckphonephone.deck.application.DeckColorTheme
 import com.example.deckphonephone.deck.application.OverlayHandPreference
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
@@ -68,6 +69,7 @@ fun DeckSettingScreen(
     onOpenAppSettings: () -> Unit,
     onDismissAppSettings: () -> Unit,
     onDarkThemeChanged: (Boolean) -> Unit,
+    onColorThemeChanged: (DeckColorTheme) -> Unit,
     onOverlayRightHandedChanged: (Boolean) -> Unit,
     onCreateActionCard: () -> Unit,
     onActionCardClicked: (ActionCard) -> Unit,
@@ -89,16 +91,23 @@ fun DeckSettingScreen(
     modifier: Modifier = Modifier,
 ) {
     val selectedCategory = uiState.categories.firstOrNull { it.id == uiState.selectedCategoryId }
+    val screenBackground = if (selectedCategory == null) {
+        DeckUiColors.categoryScreenBackground
+    } else {
+        DeckUiColors.actionScreenBackground
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = screenBackground,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    containerColor = screenBackground,
+                    titleContentColor = DeckUiColors.headerTitle,
+                    navigationIconContentColor = DeckUiColors.headerIcon,
+                    actionIconContentColor = DeckUiColors.headerIcon,
                 ),
                 title = {
                     Text(
@@ -163,8 +172,10 @@ fun DeckSettingScreen(
     if (uiState.isAppSettingsOpen) {
         AppSettingsDialog(
             isDarkTheme = uiState.isDarkTheme,
+            colorTheme = uiState.colorTheme,
             isRightHanded = uiState.overlayHandPreference == OverlayHandPreference.Right,
             onDarkThemeChanged = onDarkThemeChanged,
+            onColorThemeChanged = onColorThemeChanged,
             onRightHandedChanged = onOverlayRightHandedChanged,
             onDismiss = onDismissAppSettings,
         )

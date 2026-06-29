@@ -1,15 +1,21 @@
 package com.example.deckphonephone.deck.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -18,13 +24,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.deckphonephone.deck.application.DeckColorTheme
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
+import com.example.deckphonephone.ui.theme.previewColor
 
 @Composable
 internal fun AppSettingsDialog(
     isDarkTheme: Boolean,
+    colorTheme: DeckColorTheme,
     isRightHanded: Boolean,
     onDarkThemeChanged: (Boolean) -> Unit,
+    onColorThemeChanged: (DeckColorTheme) -> Unit,
     onRightHandedChanged: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -39,6 +49,10 @@ internal fun AppSettingsDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+                AppColorThemeSelector(
+                    selectedTheme = colorTheme,
+                    onThemeChanged = onColorThemeChanged,
+                )
                 AppSettingsSwitchRow(
                     title = "화면 모드",
                     description = if (isDarkTheme) "다크 모드" else "라이트 모드",
@@ -59,6 +73,88 @@ internal fun AppSettingsDialog(
             }
         },
     )
+}
+
+@Composable
+private fun AppColorThemeSelector(
+    selectedTheme: DeckColorTheme,
+    onThemeChanged: (DeckColorTheme) -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = "앱 색상",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            DeckColorTheme.entries.forEach { theme ->
+                AppColorThemeOption(
+                    colorTheme = theme,
+                    selected = selectedTheme == theme,
+                    onClick = { onThemeChanged(theme) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppColorThemeOption(
+    colorTheme: DeckColorTheme,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.small,
+        color = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        border = BorderStroke(
+            width = if (selected) 2.dp else 1.dp,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            },
+        ),
+        modifier = modifier,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = colorTheme.previewColor(),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            ) {
+                Box(modifier = Modifier.size(12.dp))
+            }
+            Text(
+                text = colorTheme.label(),
+                style = MaterialTheme.typography.labelMedium,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
+    }
 }
 
 @Composable
@@ -92,6 +188,15 @@ private fun AppSettingsSwitchRow(
             checked = checked,
             onCheckedChange = onCheckedChange,
         )
+    }
+}
+
+private fun DeckColorTheme.label(): String {
+    return when (this) {
+        DeckColorTheme.Sky -> "하늘"
+        DeckColorTheme.Apricot -> "살구"
+        DeckColorTheme.Mint -> "민트"
+        DeckColorTheme.Lavender -> "라벤더"
     }
 }
 

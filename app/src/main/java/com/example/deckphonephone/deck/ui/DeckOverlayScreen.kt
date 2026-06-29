@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -35,7 +34,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
@@ -86,11 +84,13 @@ private fun DeckOverlayScreenContent(
     val selectedCategory = uiState.categories.firstOrNull { it.id == uiState.selectedCategoryId }
     val isCategoryOpen = selectedCategory != null
     val overlayShape = RoundedCornerShape(8.dp)
-    val overlayColor = if (isCategoryOpen) {
-        MaterialTheme.colorScheme.background.copy(alpha = 0.96f)
+    val overlayBaseColor = if (isCategoryOpen) {
+        DeckUiColors.actionScreenBackground
     } else {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
+        DeckUiColors.categoryScreenBackground
     }
+    // 오버레이 패널의 alpha와 외부 테두리는 떠 있는 패널임을 보여주기 위한 의도된 차이입니다.
+    val overlayColor = overlayBaseColor.copy(alpha = 0.96f)
     val overlayBorder = if (isCategoryOpen) {
         BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f))
     } else {
@@ -115,7 +115,7 @@ private fun DeckOverlayScreenContent(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp),
+                        .padding(12.dp),
                 ) {
                     OverlayHeader(
                         title = selectedCategory?.name ?: "",
@@ -124,7 +124,6 @@ private fun DeckOverlayScreenContent(
                         onSettingsClicked = onSettingsClicked,
                         onClose = onClose,
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
                     if (selectedCategory == null) {
                         CategoryGrid(
                             categories = uiState.categories,
@@ -135,7 +134,6 @@ private fun DeckOverlayScreenContent(
                         ActionCardGrid(
                             actionCards = uiState.actionCards,
                             connectedBluetoothDevices = uiState.connectedBluetoothDevices,
-                            cardContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                             onActionCardClicked = onActionCardClicked,
                             onEmptyClicked = onSettingsClicked,
                         )
@@ -166,22 +164,34 @@ private fun OverlayHeader(
     ) {
         if (canGoBack) {
             IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "뒤로",
+                    tint = DeckUiColors.headerIcon,
+                )
             }
         }
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = DeckUiColors.headerTitle,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
         IconButton(onClick = onSettingsClicked, modifier = Modifier.size(48.dp)) {
-            Icon(imageVector = Icons.Filled.Settings, contentDescription = "설정")
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                contentDescription = "설정",
+                tint = DeckUiColors.headerIcon,
+            )
         }
         IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
-            Icon(imageVector = Icons.Filled.Close, contentDescription = "닫기")
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = "닫기",
+                tint = DeckUiColors.headerIcon,
+            )
         }
     }
 }
@@ -194,7 +204,7 @@ private fun CategoryGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 88.dp),
-        contentPadding = PaddingValues(bottom = 8.dp),
+        contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.heightIn(max = 474.dp),
@@ -220,13 +230,12 @@ private fun CategoryGrid(
 private fun ActionCardGrid(
     actionCards: List<ActionCard>,
     connectedBluetoothDevices: List<ConnectedBluetoothDevice>,
-    cardContainerColor: Color,
     onActionCardClicked: (ActionCard) -> Unit,
     onEmptyClicked: () -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 88.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 8.dp),
+        contentPadding = PaddingValues(top = 12.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.heightIn(max = 474.dp),
@@ -236,7 +245,6 @@ private fun ActionCardGrid(
                 DeckEmptyCard(
                     text = "+ 액션 카드 추가",
                     onClick = onEmptyClicked,
-                    containerColor = cardContainerColor,
                 )
             }
         }
@@ -244,7 +252,6 @@ private fun ActionCardGrid(
             OverlayActionCard(
                 card = card,
                 connectedBluetoothDevices = connectedBluetoothDevices,
-                containerColor = cardContainerColor,
                 onClick = onActionCardClicked,
             )
         }
@@ -263,7 +270,7 @@ private fun OverlayCategoryCard(
         DeckCardTextContent(
             title = category.name,
             label = "카테고리",
-            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            labelColor = DeckUiColors.categoryLabel,
             labelMaxLines = 2,
             contentPadding = 10.dp,
         )
@@ -274,7 +281,6 @@ private fun OverlayCategoryCard(
 private fun OverlayActionCard(
     card: ActionCard,
     connectedBluetoothDevices: List<ConnectedBluetoothDevice>,
-    containerColor: Color,
     onClick: (ActionCard) -> Unit,
 ) {
     val actionLabel = if (card.isEnabled) {
@@ -288,7 +294,7 @@ private fun OverlayActionCard(
         onClick = { onClick(card) },
         modifier = Modifier.height(92.dp),
         enabled = card.isEnabled,
-        containerColor = containerColor,
+        containerColor = DeckUiColors.actionCardContainer,
         breathingGlow = isConnectedBluetoothCard,
     ) {
         DeckCardTextContent(
@@ -296,9 +302,9 @@ private fun OverlayActionCard(
             label = actionLabel,
             badgeText = if (isConnectedBluetoothCard) "연결됨" else null,
             labelColor = if (card.isEnabled) {
-                MaterialTheme.colorScheme.primary
+                DeckUiColors.actionLabel
             } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+                DeckUiColors.disabledActionLabel
             },
             labelMaxLines = 2,
             contentPadding = 10.dp,

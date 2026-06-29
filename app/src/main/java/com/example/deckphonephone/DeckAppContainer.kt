@@ -13,9 +13,11 @@ import com.example.deckphonephone.deck.application.ListPairedBluetoothDevicesUse
 import com.example.deckphonephone.deck.application.ObserveConnectedBluetoothDevicesUseCase
 import com.example.deckphonephone.deck.application.ObserveActionCardsUseCase
 import com.example.deckphonephone.deck.application.ObserveCategoriesUseCase
+import com.example.deckphonephone.deck.application.ObserveColorThemeUseCase
 import com.example.deckphonephone.deck.application.ObserveDarkThemeUseCase
 import com.example.deckphonephone.deck.application.ObserveOverlayHandPreferenceUseCase
 import com.example.deckphonephone.deck.application.SetActionCardEnabledUseCase
+import com.example.deckphonephone.deck.application.SetColorThemeUseCase
 import com.example.deckphonephone.deck.application.SetDarkThemeUseCase
 import com.example.deckphonephone.deck.application.SetOverlayHandPreferenceUseCase
 import com.example.deckphonephone.deck.application.UpdateBluetoothDeviceActionCardUseCase
@@ -67,6 +69,8 @@ class DeckAppContainer(context: Context) {
         ),
         observeDarkTheme = ObserveDarkThemeUseCase(appPreferenceRepository),
         setDarkTheme = SetDarkThemeUseCase(appPreferenceRepository),
+        observeColorTheme = ObserveColorThemeUseCase(appPreferenceRepository),
+        setColorTheme = SetColorThemeUseCase(appPreferenceRepository),
         observeOverlayHandPreference = ObserveOverlayHandPreferenceUseCase(appPreferenceRepository),
         setOverlayHandPreference = SetOverlayHandPreferenceUseCase(appPreferenceRepository),
     )

@@ -10,7 +10,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,7 +40,7 @@ internal fun CategoryCard(
             DeckCardTextContent(
                 title = category.name,
                 label = "카테고리",
-                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                labelColor = DeckUiColors.categoryLabel,
                 modifier = Modifier.padding(end = 40.dp),
             )
             Box(modifier = Modifier.align(Alignment.TopEnd)) {
@@ -96,6 +95,7 @@ internal fun ActionCardView(
         onClick = { onClick(card) },
         modifier = Modifier.height(92.dp),
         enabled = card.isEnabled,
+        containerColor = DeckUiColors.actionCardContainer,
         breathingGlow = isConnectedBluetoothCard,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -104,9 +104,9 @@ internal fun ActionCardView(
                 label = actionLabel,
                 badgeText = if (isConnectedBluetoothCard) "연결됨" else null,
                 labelColor = if (card.isEnabled) {
-                    MaterialTheme.colorScheme.primary
+                    DeckUiColors.actionLabel
                 } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                    DeckUiColors.disabledActionLabel
                 },
                 modifier = Modifier.padding(end = 40.dp),
             )

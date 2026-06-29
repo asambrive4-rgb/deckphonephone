@@ -3,6 +3,7 @@ package com.example.deckphonephone.deck.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.deckphonephone.deck.application.DeckColorTheme
 import com.example.deckphonephone.deck.application.DeckError
 import com.example.deckphonephone.deck.application.DeckResult
 import com.example.deckphonephone.deck.application.DeckUseCases
@@ -43,6 +44,13 @@ class DeckSettingViewModel(
             useCases.observeDarkTheme().collect { isDarkTheme ->
                 _uiState.update { state ->
                     state.copy(isDarkTheme = isDarkTheme)
+                }
+            }
+        }
+        viewModelScope.launch(dispatcher) {
+            useCases.observeColorTheme().collect { colorTheme ->
+                _uiState.update { state ->
+                    state.copy(colorTheme = colorTheme)
                 }
             }
         }
@@ -93,6 +101,12 @@ class DeckSettingViewModel(
     fun setDarkTheme(isDarkTheme: Boolean) {
         viewModelScope.launch(dispatcher) {
             useCases.setDarkTheme(isDarkTheme)
+        }
+    }
+
+    fun setColorTheme(colorTheme: DeckColorTheme) {
+        viewModelScope.launch(dispatcher) {
+            useCases.setColorTheme(colorTheme)
         }
     }
 

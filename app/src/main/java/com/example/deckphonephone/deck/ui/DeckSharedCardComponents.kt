@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
 import com.example.deckphonephone.deck.domain.ActionCard
 import com.example.deckphonephone.deck.domain.ActionCardOperation
-import com.example.deckphonephone.ui.theme.SkyMainAccent
 
 @Composable
 internal fun DeckCardSurface(
@@ -62,7 +61,7 @@ internal fun DeckCardSurface(
         targetValue = if (isPressed && enabled) 0.97f else 1f,
         label = "deck-card-press-scale",
     )
-    val resolvedContainerColor = containerColor ?: MaterialTheme.colorScheme.surface
+    val resolvedContainerColor = containerColor ?: DeckUiColors.categoryCardContainer
     val glowProgress = if (breathingGlow && enabled) {
         val infiniteTransition = rememberInfiniteTransition(label = "deck-card-breathing-glow")
         val animatedProgress by infiniteTransition.animateFloat(
@@ -82,14 +81,14 @@ internal fun DeckCardSurface(
         0f
     }
     val isGlowVisible = breathingGlow && enabled
-    val glowColor = MaterialTheme.colorScheme.primary
+    val glowColor = DeckUiColors.cardGlow
     val cardBorder = if (isGlowVisible) {
         BorderStroke(
             width = 1.dp,
             color = glowColor.copy(alpha = 0.16f + 0.20f * glowProgress),
         )
     } else {
-        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        BorderStroke(1.dp, DeckUiColors.cardBorder)
     }
 
     Box(
@@ -245,7 +244,7 @@ internal fun DeckCardTextContent(
     labelMaxLines: Int = 1,
     contentPadding: Dp = 14.dp,
 ) {
-    val resolvedLabelColor = labelColor ?: MaterialTheme.colorScheme.primary
+    val resolvedLabelColor = labelColor ?: DeckUiColors.actionLabel
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -255,7 +254,7 @@ internal fun DeckCardTextContent(
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = DeckUiColors.cardTitle,
             maxLines = titleMaxLines,
             overflow = TextOverflow.Ellipsis,
         )
@@ -291,12 +290,12 @@ private fun DeckCardLabelRow(
         if (badgeText != null) {
             Surface(
                 shape = RoundedCornerShape(999.dp),
-                color = SkyMainAccent,
+                color = DeckUiColors.connectedBadgeContainer,
             ) {
                 Text(
                     text = badgeText,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.background,
+                    color = DeckUiColors.connectedBadgeContent,
                     maxLines = 1,
                     overflow = TextOverflow.Clip,
                     modifier = Modifier
@@ -313,15 +312,12 @@ internal fun DeckEmptyCard(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color? = null,
 ) {
-    val resolvedContainerColor = containerColor ?: MaterialTheme.colorScheme.surfaceVariant
-
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(8.dp),
-        color = resolvedContainerColor,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        color = DeckUiColors.emptyCardContainer,
+        border = BorderStroke(1.dp, DeckUiColors.cardBorder),
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 96.dp),
@@ -333,7 +329,7 @@ internal fun DeckEmptyCard(
             Text(
                 text = text,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
+                color = DeckUiColors.emptyCardText,
             )
         }
     }

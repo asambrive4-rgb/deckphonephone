@@ -29,7 +29,7 @@ fun DeckOverlayPermissionScreen(
     BackHandler(onBack = onClose)
 
     Surface(
-        color = MaterialTheme.colorScheme.background,
+        color = MaterialTheme.colorScheme.surface,
         modifier = modifier.fillMaxSize(),
     ) {
         Box(
@@ -46,7 +46,7 @@ fun DeckOverlayPermissionScreen(
                 Text(
                     text = "오버레이 권한이 필요합니다",
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                 )
                 Text(

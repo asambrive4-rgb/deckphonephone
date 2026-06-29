@@ -1,5 +1,6 @@
 package com.example.deckphonephone.deck.ui
 
+import com.example.deckphonephone.deck.application.DeckColorTheme
 import com.example.deckphonephone.deck.application.OverlayHandPreference
 import com.example.deckphonephone.deck.application.ConnectedBluetoothDevice
 import com.example.deckphonephone.deck.application.PairedBluetoothDevice
@@ -23,6 +24,7 @@ data class DeckSettingUiState(
     val isBluetoothDevicesLoading: Boolean = false,
     val isCreatingActionCard: Boolean = false,
     val isDarkTheme: Boolean = false,
+    val colorTheme: DeckColorTheme = DeckColorTheme.Sky,
     val overlayHandPreference: OverlayHandPreference = OverlayHandPreference.Right,
     val isAppSettingsOpen: Boolean = false,
     val editingCategory: CategoryEditState? = null,
